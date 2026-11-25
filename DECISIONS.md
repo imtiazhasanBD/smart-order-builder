@@ -9,12 +9,12 @@ This register tracks critical architectural, business logic, and trade-off decis
 | ID | Decision | Status |
 |---|---|---|
 | C1 | Money representation and rounding | Decided |
-| C2 | Supported chatbot questions and analytics function contract | Pending |
+| C2 | Supported chatbot questions and analytics function contract | Decided |
 | D1 | Concurrent stock behavior | Decided |
 | D2 | Price lock timing | Decided |
 | D3 | Reservation expiry during edit | Decided |
 | D4 | Order ID/timestamp ownership and duplicate Pay prevention | Decided |
-| D5 | Best customer data limitation | Pending |
+| D5 | Best customer data limitation | Decided |
 | D6 | Order JSON schema and coupon recording | Decided |
 
 ---
@@ -37,12 +37,26 @@ The final payable amount is rounded to whole BDT, giving 1,585 BDT.
 
 ---
 
-### C2: Supported Chatbot Questions and Analytics Function Contract
-- **Decision**: Define the exact list of query types and deterministic function interfaces powering the sales assistant.
-- **Selected approach**: Pending
-- **Reasoning**: Pending
-- **Trade-offs**: Pending
-- **Status**: Pending
+### C2: Supported Chatbot Questions and Analytics Functions
+
+**Decision:** The chatbot will support the following questions using TypeScript analytics functions:
+
+| Question | Function | Input |
+|---|---|---|
+| How many orders? | `getOrderCount` | `orders` |
+| What is the total revenue? | `getTotalRevenue` | `orders` |
+| What is the best-selling option? | `getBestSellingOption` | `orders, groups` |
+| Revenue by payment method? | `getRevenueByPaymentMethod` | `orders` |
+| What is the average order value? | `getAverageOrderValue` | `orders` |
+| How many orders used MORNING15? | `getCouponUsageStats` | `orders, couponCode` |
+| Orders and revenue on a given date? | `getOrdersByDate` | `orders, date` |
+| Who is our best customer? | `getUnavailableDataNotice` | `dataType` |
+
+**Reasoning:** Gemini will understand the question, select the appropriate function, and explain its result. All calculations will happen in TypeScript, not in the AI model. This keeps the numbers consistent with the actual order data.
+
+**Trade-off:** Supporting new types of questions may require adding new analytics functions and tools, but each calculation can be tested independently.
+
+**Status:** Decided
 
 ---
 
@@ -101,11 +115,14 @@ I chose this because stock needs to be reserved immediately to prevent overselli
 ---
 
 ### D5: Best Customer Data Limitation
-- **Decision**: Determine system response and hallucination guardrails when queried for customer identity data not tracked by the schema.
-- **Selected approach**: Pending
-- **Reasoning**: Pending
-- **Trade-offs**: Pending
-- **Status**: Pending
+
+**Decision:** If someone asks about customer details, such as "Who is our best customer?" or "Where was order X delivered?", the assistant will explain that this information is not available.
+
+**Reasoning:** The order data does not include customer names, IDs, emails, or delivery addresses. The assistant will not guess or make up this information. Instead, the analytics tool will return `supported: false` with a reason.
+
+**Trade-off:** Customer-related questions cannot be answered, but the assistant will only provide information supported by the available data.
+
+**Status:** Decided
 
 ---
 

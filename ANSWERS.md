@@ -119,28 +119,84 @@ After rounding to the nearest whole BDT, the final payable is **1,600 BDT**.
 
 ---
 
-### Q5. Historical Seed Orders Pricing and Total Revenue
-- **Objective**: Calculate the exact payable for each of the six seed orders at their respective creation timestamps, along with cumulative revenue.
-- **Status**: Pending verification
-- **Calculation**: Pending
+## Q5. Historical Seed Orders Pricing and Total Revenue
+
+**Answer: 4,995 BDT** across all 6 seed orders.
+
+**Verification:** `npm test src/test/analyticsEngine.test.ts`
+
+| Order ID | Created At (Dhaka) | Method | Coupon | Subtotal | Discount | VAT (5%) | Payable |
+|---|---|---|---|---:|---:|---:|---:|
+| ORD-1001 | Nov 20, 09:15 | Card | MORNING15 | 380.00 | -57.00 | 16.15 | **339 BDT** |
+| ORD-1002 | Nov 20, 12:40 | bKash | — | 679.50 | 0.00 | 33.98 | **713 BDT** |
+| ORD-1003 | Nov 21, 10:05 | Cash | MORNING15 | 1,360.00 | -150.00 | 60.50 | **1,271 BDT** |
+| ORD-1004 | Nov 21, 19:30 | Card | — | 550.00 | 0.00 | 27.50 | **578 BDT** |
+| ORD-1005 | Nov 22, 08:50 | bKash | MORNING15 | 970.00 | -145.50 | 41.23 | **866 BDT** |
+| ORD-1006 | Nov 22, 13:10 | Card | MORNING15 | 1,169.50 | 0.00 (Expired) | 58.48 | **1,228 BDT** |
+
+**Total revenue: 4,995 BDT (499,500 poisha).**
 
 ---
 
-### Q6. Best-Selling Option Across Seed Orders
-- **Objective**: Identify the most frequently ordered option across all seed orders by multiplying line quantities with option counts.
-- **Status**: Pending verification
-- **Calculation**: Pending
+## Q6. Best-Selling Option Across Seed Orders
+
+**Answer: Fried Eggs (10 units sold).**
+
+**Verification:** `npm test src/test/analyticsEngine.test.ts`
+
+**Option quantities sold:**
+
+| Option | Units Sold |
+|---|---:|
+| Fried Eggs | 10 |
+| Scrambled Eggs | 8 |
+| Toast | 4 |
+| Chicken Sausage | 4 |
+| Cheese | 4 |
+| Omelette | 3 |
+| Croissant | 3 |
+| Mushroom | 3 |
+| Hollandaise | 3 |
+| Paratha | 3 |
+| Tofu | 2 |
+| Beef Bacon | 2 |
+| Hashbrown | 2 |
+| Baked Beans | 2 |
+| Ketchup | 2 |
+| Chili | 1 |
+
+Fried Eggs had the highest quantity sold across the six orders.
 
 ---
 
-### Q7. Revenue Breakdown by Payment Method
-- **Objective**: Determine which payment method generated the highest total revenue across the seed orders dataset.
-- **Status**: Pending verification
-- **Calculation**: Pending
+## Q7. Revenue Breakdown by Payment Method
+
+**Answer: Card generated the highest revenue (2,145 BDT).**
+
+**Verification:** `npm test src/test/analyticsEngine.test.ts`
+
+| Payment Method | Orders | Revenue | Share |
+|---|---:|---:|---:|
+| Card | 3 | 2,145 BDT | 42.94% |
+| bKash | 2 | 1,579 BDT | 31.61% |
+| Cash | 1 | 1,271 BDT | 25.45% |
+| **Total** | **6** | **4,995 BDT** | **100.00%** |
+
+Card contributed the largest share of total revenue.
 
 ---
 
-### Q8. Coupon Redemption Analysis Across Seed Orders
-- **Objective**: Count how many seed orders received the morning coupon discount, providing root-cause explanations for any order where the code was entered but unapplied.
-- **Status**: Pending verification
-- **Calculation**: Pending
+## Q8. Coupon Redemption Analysis Across Seed Orders
+
+**Answer: 3 orders applied MORNING15 successfully, while 1 order entered the code but did not receive the discount.**
+
+**Verification:** `npm test src/test/analyticsEngine.test.ts`
+
+- **Entered:** 4 orders — ORD-1001, ORD-1003, ORD-1005, ORD-1006
+- **Applied:** 3 orders
+- **Not applied:** 1 order — ORD-1006
+- **Total discounts:** 352.50 BDT
+
+**Why ORD-1006 did not receive the discount:**
+
+The order was created at 13:10 (1:10 PM) Bangladesh time. MORNING15 is only valid before 11:00 AM, so the coupon was rejected.
