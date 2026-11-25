@@ -8,10 +8,10 @@ This register tracks critical architectural, business logic, and trade-off decis
 
 | ID | Decision | Status |
 |---|---|---|
-| C1 | Money representation and rounding | Pending |
+| C1 | Money representation and rounding | Decided |
 | C2 | Supported chatbot questions and analytics function contract | Pending |
 | D1 | Concurrent stock behavior | Decided |
-| D2 | Price lock timing | Pending |
+| D2 | Price lock timing | Decided |
 | D3 | Reservation expiry during edit | Pending |
 | D4 | Order ID/timestamp ownership and duplicate Pay prevention | Pending |
 | D5 | Best customer data limitation | Pending |
@@ -22,11 +22,18 @@ This register tracks critical architectural, business logic, and trade-off decis
 ## Register Details
 
 ### C1: Money Representation and Rounding
-- **Decision**: Determine numerical format for currency storage and rounding methodology across pricing calculations.
-- **Selected approach**: Pending
-- **Reasoning**: Pending
-- **Trade-offs**: Pending
-- **Status**: Pending
+
+**Decision:** Store all money as integer poisha and use half-up rounding for percentage calculations.
+
+**Reasoning:**
+
+I chose integer poisha instead of JavaScript floats to avoid decimal precision issues. For example, in TC-06, calculating 5% VAT on 1,509.50 BDT using floats can produce `75.47499999999999`. Using poisha, the calculation is 150,950 × 5 / 100 = 7,547.5, which rounds half-up to 7,548 poisha (75.48 BDT).
+
+The final payable amount is rounded to whole BDT, giving 1,585 BDT.
+
+**Trade-off:** I need to convert BDT to poisha when calculating and back to BDT when displaying prices, but this keeps money calculations consistent.
+
+**Status:** Decided
 
 ---
 
@@ -41,30 +48,31 @@ This register tracks critical architectural, business logic, and trade-off decis
 
 ### D1: Concurrent Stock Behavior
 
-**Decision:** Keep the user's changes when stock runs out in another tab.
-
-**Selected approach:**
-
-If Tab A is editing an item and Tab B takes the remaining stock, Tab A will get a 409 Conflict when saving. The error will show which ingredient is no longer available. The edit modal will stay open with the user's previous selections intact, so they can adjust the item and try again. Available stock and option limits will also be updated.
+**Decision:** Keep the user's changes if stock becomes unavailable in another tab.
 
 **Reasoning:**
 
-Closing the modal or clearing the form would force the customer to configure the item again. Keeping their selections makes it easier to fix only the options affected by the stock shortage. The server will validate the updated stock before accepting the changes.
+If Tab A is editing an item and Tab B takes the remaining stock, saving from Tab A will return a 409 Conflict. I'll show which ingredients are unavailable and keep the edit modal open with the user's selections unchanged. The user can adjust the options and try again after the stock information is updated.
 
-**Trade-offs:**
+I chose this approach because clearing the form would force the user to configure the item again. Keeping their selections makes it easier to fix only the affected options.
 
-The frontend needs to refresh stock information without losing the current form state. This adds some state management work, but provides a better editing experience.
+**Trade-off:** I need to refresh stock information without resetting the form state, which requires some extra state management.
 
 **Status:** Decided
 
 ---
 
 ### D2: Price Lock Timing
-- **Decision**: Establish when promotional pricing rules and discounts are locked during the order lifecycle.
-- **Selected approach**: Pending
-- **Reasoning**: Pending
-- **Trade-offs**: Pending
-- **Status**: Pending
+
+**Decision:** Reserve stock when adding an item to the cart, but calculate promotional discounts at checkout.
+
+**Reasoning:**
+
+I chose this because stock needs to be reserved immediately to prevent overselling, while promotions can expire. MORNING15 is valid only before 11:00 AM. In TC-06, the coupon applies at 10:59:59, but in TC-07, it is rejected at 11:00:00 and C1 is applied instead.
+
+**Trade-off:** The cart total can change if the customer waits until after 11:00 AM to checkout. I'll show the updated price and explain why the coupon is no longer valid.
+
+**Status:** Decided
 
 ---
 
@@ -96,66 +104,61 @@ The frontend needs to refresh stock information without losing the current form 
 ---
 
 ### D6: Order JSON Schema and Coupon Recording
-- **Decision**: Define the persistent JSON structure for orders, pricing snapshots, and unapplied coupon attempts.
-- **Selected approach**:
-  For stored orders, I decided to snapshot the full configuration alongside all pricing stages directly inside the record so historical receipts never drift if menu pricing changes later. All financial values are kept strictly in integer poisha (1 BDT = 100 poisha) as the single source of truth to dodge floating-point bugs, with read-only BDT values attached so the UI and exports don't have to repeatedly divide by 100. When a customer enters a coupon code like `MORNING15` that doesn't qualify—such as checking out after 11:00 AM—I still persist the code and keep a `couponStatus` object recording `{ code, entered: true, applied: false, reason: "Order placed after 11:00 AM cutoff" }`. This gives the sales assistant and audit logs clear proof of customer intent while explaining exactly why zero discount was deducted.
 
-  ```json
-  {
-    "id": "ORD-1007",
-    "createdAt": "2026-11-25T20:30:00+06:00",
-    "paymentMethod": "bkash",
-    "couponCode": "MORNING15",
-    "lines": [
-      {
-        "itemId": "item-1",
-        "qty": 2,
-        "options": {
-          "paratha": 1,
-          "fried": 2,
-          "tofu": 1,
-          "cheese": 2,
-          "beans": 1,
-          "mushroom": 1,
-          "chili": 1
-        },
-        "unitPricePoisha": 49000,
-        "unitPriceBDT": 490,
-        "lineTotalPoisha": 98000,
-        "lineTotalBDT": 980
-      }
-    ],
-    "pricing": {
-      "currency": "BDT",
-      "unitSubtotalPoisha": 49000,
-      "unitSubtotalBDT": 490,
-      "step2ExtrasDiscountPoisha": 0,
-      "step3ComboDiscountPoisha": 0,
-      "finalUnitPricePoisha": 49000,
-      "finalUnitPriceBDT": 490,
-      "cartSubtotalPoisha": 98000,
-      "cartSubtotalBDT": 980,
-      "appliedDiscount": {
-        "type": "NONE",
-        "name": "No discount applied",
-        "amountPoisha": 0,
-        "amountBDT": 0
+**Decision:** Store each order with its configuration, pricing breakdown, and coupon status in JSON.
+
+**Selected approach:**
+
+I'll store money in integer poisha as the main value for all calculations. Each order will also contain a snapshot of its selected options and final pricing so that old orders remain unchanged if menu prices change later.
+
+If a customer enters a coupon but it isn't applied, I'll still save the coupon code with `entered: true`, `applied: false`, and a reason explaining why it was rejected.
+
+**Example order structure:**
+
+```json
+{
+  "id": "ORD-1007",
+  "createdAt": "2026-11-25T20:30:00+06:00",
+  "paymentMethod": "bkash",
+  "lines": [
+    {
+      "itemId": "item-1",
+      "qty": 2,
+      "options": {
+        "paratha": 1,
+        "fried": 2,
+        "tofu": 1,
+        "cheese": 2,
+        "beans": 1,
+        "mushroom": 1,
+        "chili": 1
       },
-      "couponStatus": {
-        "code": "MORNING15",
-        "entered": true,
-        "applied": false,
-        "reason": "Coupon MORNING15 is valid only strictly before 11:00 AM Dhaka time"
-      },
-      "discountedSubtotalPoisha": 98000,
-      "discountedSubtotalBDT": 980,
-      "vatPoisha": 4900,
-      "vatBDT": 49,
-      "payablePoisha": 102900,
-      "payableBDT": 1029
+      "unitPricePoisha": 49000,
+      "lineTotalPoisha": 98000
     }
+  ],
+  "pricing": {
+    "currency": "BDT",
+    "cartSubtotalPoisha": 98000,
+    "appliedDiscount": {
+      "type": "NONE",
+      "amountPoisha": 0
+    },
+    "couponStatus": {
+      "code": "MORNING15",
+      "entered": true,
+      "applied": false,
+      "reason": "Coupon expired after 11:00 AM"
+    },
+    "discountedSubtotalPoisha": 98000,
+    "vatPoisha": 4900,
+    "payablePoisha": 102900
   }
-  ```
-- **Reasoning**: Storing integer poisha avoids cumulative rounding bugs in financial ledgers. Recording rejected coupons with a clear reason makes the seed order analysis (Q8) and staff assistant queries deterministic instead of guessing why a coupon had 0 BDT discount.
-- **Trade-offs**: Including formatted BDT fields alongside poisha adds a few extra bytes per order, but it saves the frontend and export handlers from having to repeatedly do `/ 100` formatting.
-- **Status**: Decided
+}
+```
+
+**Reasoning:** Keeping the pricing breakdown in the order makes historical totals easy to verify. Saving rejected coupon attempts will also help answer Q8 and prevent the sales assistant from assuming that every entered coupon was applied.
+
+**Trade-off:** The JSON contains more pricing details, but this makes order history and revenue calculations easier to maintain.
+
+**Status:** Decided

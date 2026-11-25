@@ -136,8 +136,14 @@ src/
 - **Test Coverage**: Tested in `src/test/stockEngine.test.ts` covering TC-08 through TC-11 and Q1 verification.
 
 ### 3. Pricing Engine (`src/engines/pricing/`)
-- **Status**: Planned for Step 04
-- **Purpose**: Executes pure financial calculations exclusively in integer Bangladeshi Poisha ($1\text{ BDT} = 100\text{ poisha}$) to avoid floating-point errors. Evaluates multi-tier promotions, time-sensitive coupons, and 5% VAT with half-up rounding.
+- **Status**: Implemented (`src/engines/pricing/pricing.ts`)
+- **Key Functions**:
+  - `priceItemUnit(options, menu, promos)`: Computes single-item unit pricing applying Step 1 (base + options), Step 2 (P2 extras deal: cheapest free per 3 extras), and Step 3 (P1 combo: 10% off if eggs $\ge 4$ and protein $\ge 2$).
+  - `priceCart(cart, menu, promos, serverTime, couponCode?)`: Evaluates total cart pricing applying Step 4 (line totals and subtotal), Step 5 (mutually exclusive discount selection between C1 threshold and C2 `MORNING15` before 11:00 AM Dhaka cutoff), and Step 6 (5% VAT and whole BDT rounding).
+  - `isBefore11AmDhaka(timestamp)`: Timezone-aware Dhaka time evaluation (`Asia/Dhaka`).
+- **Precision Guarantee**: All arithmetic runs strictly in integer Bangladeshi Poisha ($1\text{ BDT} = 100\text{ poisha}$) with half-up rounding at every percentage step (`roundHalfUp`), avoiding IEEE-754 precision errors.
+- **Async Preview Mock**: MSW endpoint `POST /api/price` in `src/mocks/handlers/pricing.ts` providing live price preview with simulated latency and failure rate.
+- **Test Coverage**: Tested in `src/test/pricingEngine.test.ts` covering TC-05, TC-06, TC-07, and Q2, Q3, Q4 verifications.
 
 ---
 
@@ -175,7 +181,7 @@ src/
 
 ## 5.9 Testing
 
-### Current Testing Setup (Step 03)
+### Current Testing Setup (Step 04)
 - **Harness**: Vitest with `jsdom` environment.
 - **Setup File**: `src/test/setup.ts` with `@testing-library/jest-dom` extensions and MSW test server lifecycle (`server.listen()`, `server.resetHandlers()`, `server.close()`).
 - **Test Suites**:
@@ -183,7 +189,8 @@ src/
   - `src/test/menuApi.test.ts` (2 tests): `/api/menu` Appendix A fixture verification and 90-second server time offset.
   - `src/test/rulesEngine.test.ts` (9 tests): Acceptance criteria TC-01 to TC-04, override precedence, distinct/per-option limits, and edge cases.
   - `src/test/stockEngine.test.ts` (7 tests): Acceptance criteria TC-08 to TC-11, net-difference editing, option remaining calculations, and Q1 verification.
-- **Test Count**: 19 passed tests across 4 test suites.
+  - `src/test/pricingEngine.test.ts` (7 tests): Acceptance criteria TC-05, TC-06, TC-07, Q2, Q3, Q4, and MSW `/api/price` integration.
+- **Test Count**: 26 passed tests across 5 test suites.
 
 ### Planned Testing Coverage
 - Pure engine unit tests covering TC-01 through TC-11.
@@ -195,16 +202,16 @@ src/
 ## 5.10 Technical Trade-offs and Decisions
 
 Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/media/imtiazbd/Development/HTML/New_Devolop/Smart-Order-Builder/DECISIONS.md):
-- **C1**: Integer Poisha vs. JavaScript floating point
+- **C1**: Integer Poisha vs. JavaScript floating point (Decided in Step 04)
 - **C2**: Chatbot query surface and deterministic tool contracts
 - **D1**: Concurrent stock depletion handling (Decided in Step 03)
-- **D2**: Promotional price lock timing
+- **D2**: Promotional price lock timing (Decided in Step 04)
 - **D3**: Reservation expiry during active modification
 - **D4**: Canonical order ID and timestamp ownership
 - **D5**: Customer data limitations and anti-hallucination guardrails
 - **D6**: Order JSON schema and coupon auditing (Decided in Step 01)
 
-*(Decisions C1, C2, D2, D3, D4, and D5 remain marked Pending until their respective implementation milestones.)*
+*(Decisions C2, D3, D4, and D5 remain marked Pending until their respective implementation milestones.)*
 
 ---
 
@@ -215,7 +222,7 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 - [x] Step 01: Mock API, menu fixtures, and data contracts
 - [x] Step 02: Validation / Rules engine
 - [x] Step 03: Inventory / Stock engine
-- [ ] Step 04: Pricing engine
+- [x] Step 04: Pricing engine
 - [ ] Step 05: Order builder interface
 - [ ] Step 06: Cart and reservation lifecycle
 - [ ] Step 07: Checkout, order storage, and JSON export
@@ -238,7 +245,7 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 | Step 01 | Mock API and menu fixtures | 40 Mins |
 | Step 02 | Validation engine | 15 Mins |
 | Step 03 | Inventory engine | 40 Mins |
-| Step 04 | Pricing engine | Pending |
+| Step 04 | Pricing engine | 1 hour |
 | Step 05 | Order builder UI | Pending |
 | Step 06 | Reservations and cart | Pending |
 | Step 07 | Checkout and order persistence | Pending |
@@ -258,6 +265,6 @@ Calculations for questions Q1 through Q8 are tracked in [ANSWERS.md](file:///run
 
 ## 5.14 Project Status
 
-- **Latest Completed Milestone**: Step 02 (Validation / Rules Engine)
-- **Current Milestone**: Step 03 (Inventory / Stock Engine) — Ready for Review
-- **Next Milestone**: Step 04 (Pricing Engine)
+- **Latest Completed Milestone**: Step 03 (Inventory / Stock Engine)
+- **Current Milestone**: Step 04 (Pricing Engine) — Ready for Review
+- **Next Milestone**: Step 05 (Order Builder UI)
