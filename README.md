@@ -181,7 +181,7 @@ src/
 
 ## 5.9 Testing
 
-### Current Testing Setup (Step 04)
+### Current Testing Setup (Step 05)
 - **Harness**: Vitest with `jsdom` environment.
 - **Setup File**: `src/test/setup.ts` with `@testing-library/jest-dom` extensions and MSW test server lifecycle (`server.listen()`, `server.resetHandlers()`, `server.close()`).
 - **Test Suites**:
@@ -190,7 +190,8 @@ src/
   - `src/test/rulesEngine.test.ts` (9 tests): Acceptance criteria TC-01 to TC-04, override precedence, distinct/per-option limits, and edge cases.
   - `src/test/stockEngine.test.ts` (7 tests): Acceptance criteria TC-08 to TC-11, net-difference editing, option remaining calculations, and Q1 verification.
   - `src/test/pricingEngine.test.ts` (7 tests): Acceptance criteria TC-05, TC-06, TC-07, Q2, Q3, Q4, and MSW `/api/price` integration.
-- **Test Count**: 26 passed tests across 5 test suites.
+  - `src/test/orderBuilder.test.tsx` (6 tests): Order builder UI integration, live validation alerts, stock button disabling at 0, and TC-12 out-of-order price response handling.
+- **Test Count**: 32 passed tests across 6 test suites.
 
 ### Planned Testing Coverage
 - Pure engine unit tests covering TC-01 through TC-11.
@@ -223,7 +224,7 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 - [x] Step 02: Validation / Rules engine
 - [x] Step 03: Inventory / Stock engine
 - [x] Step 04: Pricing engine
-- [ ] Step 05: Order builder interface
+- [x] Step 05: Order builder interface
 - [ ] Step 06: Cart and reservation lifecycle
 - [ ] Step 07: Checkout, order storage, and JSON export
 - [ ] Step 08: Sales analytics engine
@@ -246,7 +247,7 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 | Step 02 | Validation engine | 15 Mins |
 | Step 03 | Inventory engine | 40 Mins |
 | Step 04 | Pricing engine | 1 hour |
-| Step 05 | Order builder UI | Pending |
+| Step 05 | Order builder UI | 1.5 hour |
 | Step 06 | Reservations and cart | Pending |
 | Step 07 | Checkout and order persistence | Pending |
 | Step 08 | Sales analytics | Pending |
@@ -265,6 +266,6 @@ Calculations for questions Q1 through Q8 are tracked in [ANSWERS.md](file:///run
 
 ## 5.14 Project Status
 
-- **Latest Completed Milestone**: Step 03 (Inventory / Stock Engine)
-- **Current Milestone**: Step 04 (Pricing Engine) — Ready for Review
-- **Next Milestone**: Step 05 (Order Builder UI)
+- **Latest Completed Milestone**: Step 04 (Pricing Engine)
+- **Current Milestone**: Step 05 (Order Builder UI) — Ready for Review
+- **Next Milestone**: Step 06 (Reservations and Cart)

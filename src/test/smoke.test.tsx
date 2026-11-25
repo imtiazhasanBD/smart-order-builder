@@ -14,4 +14,15 @@ describe('Project Foundation Smoke Test', () => {
     const heading = screen.getByRole('heading', { name: /smart order builder/i });
     expect(heading).toBeInTheDocument();
   });
+
+  it('renders order builder skeleton while menu data is loading', () => {
+    render(
+      <AppProviders>
+        <App />
+      </AppProviders>
+    );
+
+    // Initial render displays the comprehensive skeleton placeholder
+    expect(screen.getByTestId('order-builder-skeleton')).toBeInTheDocument();
+  });
 });
