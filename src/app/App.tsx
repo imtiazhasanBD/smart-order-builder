@@ -1,48 +1,106 @@
-import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { fetchMenu, fetchServerTime } from '@/services/api';
+import React, { useState, useCallback } from 'react';
+import { useMenu } from '@/hooks/useMenu';
+import { useServerTime } from '@/hooks/useServerTime';
+import { useCart } from '@/hooks/useCart';
+import { useCartMutations } from '@/hooks/useCartMutations';
 import { OrderBuilder } from '@/features/configurator/OrderBuilder';
 import { OrderBuilderSkeleton } from '@/components/OrderBuilderSkeleton';
+import { Cart } from '@/features/cart/Cart';
 import { Navbar } from '@/components/Navbar';
-import { AlertCircle, ShoppingBag, History, Bot } from 'lucide-react';
-import { SelectedOptions } from '@/types';
+import { AlertCircle, History, Bot } from 'lucide-react';
+import { SelectedOptions, PaymentMethod } from '@/types';
+import { CartReservationItem } from '@/mocks/serverStore';
 
 export const App: React.FC = () => {
+  // Navigation & Coordinator state
   const [activeTab, setActiveTab] = useState<'builder' | 'cart' | 'assistant' | 'orders'>('builder');
-  const [serverOffsetMs, setServerOffsetMs] = useState<number>(90000);
-  const [cartCount, setCartCount] = useState<number>(0);
-
-  // Sync server clock on mount
-  useEffect(() => {
-    fetchServerTime()
-      .then((data) => {
-        setServerOffsetMs(data.serverOffsetMs);
-      })
-      .catch(() => {
-        // Fallback default 90s offset
-      });
-  }, []);
-
-  // Fetch menu fixture using TanStack Query
-  const { data: menu, isLoading, isError, error } = useQuery({
-    queryKey: ['menu'],
-    queryFn: fetchMenu,
-  });
-
-  const handleAddToCart = (item: {
+  const [editingItem, setEditingItem] = useState<{
+    id: string;
     options: SelectedOptions;
     qty: number;
-    unitPriceBDT: number;
+  } | null>(null);
+
+  // Queries & Synchronizations managed via dedicated custom hooks
+  const { menu, isLoading, isError, error } = useMenu();
+  const { serverOffsetMs } = useServerTime();
+  const { cartItems, cartVersion, cartCount, remainingStock } = useCart(menu?.ingredientStock);
+
+  // Cart operations orchestrated via TanStack Query mutations
+  const { addMutation, editMutation, removeMutation, checkoutMutation } = useCartMutations(cartVersion);
+
+  // Add / Edit submission from OrderBuilder
+  const handleAddToCart = async (item: {
+    options: SelectedOptions;
+    qty: number;
+    unitPriceBDT?: number;
   }) => {
-    setCartCount((prev) => prev + item.qty);
-    console.log('Item added to cart:', item);
+    if (editingItem) {
+      await editMutation.mutateAsync({
+        id: editingItem.id,
+        options: item.options,
+        qty: item.qty,
+      });
+      setEditingItem(null);
+    } else {
+      await addMutation.mutateAsync({
+        options: item.options,
+        qty: item.qty,
+      });
+    }
+    setActiveTab('cart');
   };
+
+  // Launch edit mode from Cart
+  const handleEditItemLaunch = (item: CartReservationItem) => {
+    setEditingItem({
+      id: item.id,
+      options: { ...item.options },
+      qty: item.qty,
+    });
+    setActiveTab('builder');
+  };
+
+  // Cancel edit mode
+  const handleCancelEdit = () => {
+    setEditingItem(null);
+    setActiveTab('cart');
+  };
+
+  // Remove cart item
+  const handleRemoveItem = useCallback(
+    async (itemId: string) => {
+      await removeMutation.mutateAsync(itemId);
+    },
+    [removeMutation]
+  );
+
+  // Checkout order
+  const handleCheckout = useCallback(
+    async (
+      paymentMethod: PaymentMethod,
+      couponCode: string | null,
+      idempotencyKey: string
+    ) => {
+      await checkoutMutation.mutateAsync({
+        paymentMethod,
+        couponCode,
+        idempotencyKey,
+      });
+      setActiveTab('orders');
+    },
+    [checkoutMutation]
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Navbar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={(tab) => {
+          if (editingItem && tab !== 'builder') {
+            setEditingItem(null);
+          }
+          setActiveTab(tab);
+        }}
         cartCount={cartCount}
         serverOffsetMs={serverOffsetMs}
       />
@@ -53,7 +111,7 @@ export const App: React.FC = () => {
           <OrderBuilderSkeleton />
         ) : isError || !menu ? (
           <div className="min-h-[400px] flex items-center justify-center p-4">
-            <div className="bg-white border border-rose-200 rounded-md p-6 max-w-md shadow text-center">
+            <div className="bg-white border border-rose-200 rounded-md p-6 max-w-md shadow-sm text-center">
               <AlertCircle className="w-10 h-10 text-rose-500 mx-auto mb-3" />
               <h2 className="text-lg font-bold text-slate-800">Failed to Initialize Application</h2>
               <p className="text-sm text-slate-500 mt-2 mb-4">
@@ -72,29 +130,28 @@ export const App: React.FC = () => {
             {activeTab === 'builder' && (
               <OrderBuilder
                 menu={menu}
-                availableStock={menu.ingredientStock}
+                availableStock={remainingStock}
                 onAddToCart={handleAddToCart}
+                editingItem={editingItem}
+                onCancelEdit={handleCancelEdit}
               />
             )}
 
             {activeTab === 'cart' && (
-              <div className="bg-white border border-slate-200 rounded-md p-8 shadow-sm text-center">
-                <ShoppingBag className="w-12 h-12 text-amber-500 mx-auto mb-3" />
-                <h2 className="text-xl font-bold text-slate-800">Your Cart</h2>
-                <p className="text-sm text-slate-500 mt-1">
-                  Active reservations and cart items will be displayed here in Step 06.
-                </p>
-                <button
-                  onClick={() => setActiveTab('builder')}
-                  className="mt-4 px-4 py-2 bg-amber-500 text-slate-950 rounded-md text-sm font-bold hover:bg-amber-400"
-                >
-                  Back to Builder
-                </button>
-              </div>
+              <Cart
+                menu={menu}
+                cartItems={cartItems}
+                cartVersion={cartVersion}
+                serverOffsetMs={serverOffsetMs}
+                onEditItem={handleEditItemLaunch}
+                onRemoveItem={handleRemoveItem}
+                onCheckout={handleCheckout}
+                onSwitchToBuilder={() => setActiveTab('builder')}
+              />
             )}
 
             {activeTab === 'orders' && (
-              <div className="bg-white border border-slate-200 rounded-md p-8 shadow-sm text-center">
+              <div className="bg-white border border-slate-200 rounded-md p-8 shadow-xs text-center">
                 <History className="w-12 h-12 text-amber-500 mx-auto mb-3" />
                 <h2 className="text-xl font-bold text-slate-800">Completed Orders</h2>
                 <p className="text-sm text-slate-500 mt-1">
@@ -104,7 +161,7 @@ export const App: React.FC = () => {
             )}
 
             {activeTab === 'assistant' && (
-              <div className="bg-white border border-slate-200 rounded-md p-8 shadow-sm text-center">
+              <div className="bg-white border border-slate-200 rounded-md p-8 shadow-xs text-center">
                 <Bot className="w-12 h-12 text-indigo-600 mx-auto mb-3" />
                 <h2 className="text-xl font-bold text-slate-800">Sales AI Assistant</h2>
                 <p className="text-sm text-slate-500 mt-1">
@@ -122,5 +179,3 @@ export const App: React.FC = () => {
     </div>
   );
 };
-
-export default App;

@@ -12,7 +12,7 @@ This register tracks critical architectural, business logic, and trade-off decis
 | C2 | Supported chatbot questions and analytics function contract | Pending |
 | D1 | Concurrent stock behavior | Decided |
 | D2 | Price lock timing | Decided |
-| D3 | Reservation expiry during edit | Pending |
+| D3 | Reservation expiry during edit | Decided |
 | D4 | Order ID/timestamp ownership and duplicate Pay prevention | Pending |
 | D5 | Best customer data limitation | Pending |
 | D6 | Order JSON schema and coupon recording | Decided |
@@ -77,11 +77,14 @@ I chose this because stock needs to be reserved immediately to prevent overselli
 ---
 
 ### D3: Reservation Expiry During Edit
-- **Decision**: Determine state handling and user feedback when a temporary reservation expires while modifying an item.
-- **Selected approach**: Pending
-- **Reasoning**: Pending
-- **Trade-offs**: Pending
-- **Status**: Pending
+
+**Decision:** If a reservation expires while an item is being edited, the server releases its stock and marks the item as read-only. Saving the edit will fail with a 410 Gone or 409 Conflict response.
+
+**Reasoning:** A reservation should not hold stock beyond its 5-minute limit. If the user tries to save after expiry, I'll keep their selections in the builder and show a message explaining that the reservation has expired. They can add the configuration again as a new item if stock is still available.
+
+**Trade-off:** The user must add the item again instead of updating the expired reservation, but their unsaved selections are not lost.
+
+**Status:** Decided
 
 ---
 

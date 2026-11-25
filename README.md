@@ -181,17 +181,18 @@ src/
 
 ## 5.9 Testing
 
-### Current Testing Setup (Step 05)
+### Current Testing Setup (Step 06)
 - **Harness**: Vitest with `jsdom` environment.
 - **Setup File**: `src/test/setup.ts` with `@testing-library/jest-dom` extensions and MSW test server lifecycle (`server.listen()`, `server.resetHandlers()`, `server.close()`).
 - **Test Suites**:
-  - `src/test/smoke.test.tsx` (1 test): Application mount and render smoke test.
+  - `src/test/smoke.test.tsx` (2 tests): Application mount, navbar brand rendering, and layout smoke test.
   - `src/test/menuApi.test.ts` (2 tests): `/api/menu` Appendix A fixture verification and 90-second server time offset.
   - `src/test/rulesEngine.test.ts` (9 tests): Acceptance criteria TC-01 to TC-04, override precedence, distinct/per-option limits, and edge cases.
   - `src/test/stockEngine.test.ts` (7 tests): Acceptance criteria TC-08 to TC-11, net-difference editing, option remaining calculations, and Q1 verification.
   - `src/test/pricingEngine.test.ts` (7 tests): Acceptance criteria TC-05, TC-06, TC-07, Q2, Q3, Q4, and MSW `/api/price` integration.
-  - `src/test/orderBuilder.test.tsx` (6 tests): Order builder UI integration, live validation alerts, stock button disabling at 0, and TC-12 out-of-order price response handling.
-- **Test Count**: 32 passed tests across 6 test suites.
+  - `src/test/orderBuilder.test.tsx` (7 tests): Order builder UI integration, live validation alerts, stock button disabling at 0, Item Qty, and TC-12 out-of-order price response handling.
+  - `src/test/cartReservations.test.tsx` (4 tests): Rapid clicks idempotency (TC-13), atomic mid-way reservation failure and zero-stock held (TC-14), 5-minute timer expiry with stock release and read-only UI (TC-15), and duplicate pay click prevention (TC-16).
+- **Test Count**: 38 passed tests across 7 test suites.
 
 ### Planned Testing Coverage
 - Pure engine unit tests covering TC-01 through TC-11.
@@ -225,7 +226,7 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 - [x] Step 03: Inventory / Stock engine
 - [x] Step 04: Pricing engine
 - [x] Step 05: Order builder interface
-- [ ] Step 06: Cart and reservation lifecycle
+- [x] Step 06: Cart and reservation lifecycle
 - [ ] Step 07: Checkout, order storage, and JSON export
 - [ ] Step 08: Sales analytics engine
 - [ ] Step 09: Gemini assistant integration
@@ -248,7 +249,7 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 | Step 03 | Inventory engine | 40 Mins |
 | Step 04 | Pricing engine | 1 hour |
 | Step 05 | Order builder UI | 1.5 hour |
-| Step 06 | Reservations and cart | Pending |
+| Step 06 | Reservations and cart | 40 Mins |
 | Step 07 | Checkout and order persistence | Pending |
 | Step 08 | Sales analytics | Pending |
 | Step 09 | Gemini assistant | Pending |

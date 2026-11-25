@@ -8,7 +8,7 @@ export const menuHandlers = [
     const response: MenuResponse = {
       ...MENU_FIXTURE,
       ingredientStock: serverStore.getIngredientStock(),
-      serverTime: serverStore.getServerTime(),
+      serverTime: serverStore.getServerTimeISO(),
     };
     return HttpResponse.json(response);
   }),
