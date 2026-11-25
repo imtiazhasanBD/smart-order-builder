@@ -3,11 +3,13 @@ import { useMenu } from '@/hooks/useMenu';
 import { useServerTime } from '@/hooks/useServerTime';
 import { useCart } from '@/hooks/useCart';
 import { useCartMutations } from '@/hooks/useCartMutations';
+import { useOrders } from '@/hooks/useOrders';
 import { OrderBuilder } from '@/features/configurator/OrderBuilder';
 import { OrderBuilderSkeleton } from '@/components/OrderBuilderSkeleton';
 import { Cart } from '@/features/cart/Cart';
+import { OrdersView } from '@/features/orders/OrdersView';
 import { Navbar } from '@/components/Navbar';
-import { AlertCircle, History, Bot } from 'lucide-react';
+import { AlertCircle, Bot } from 'lucide-react';
 import { SelectedOptions, PaymentMethod } from '@/types';
 import { CartReservationItem } from '@/mocks/serverStore';
 
@@ -24,6 +26,7 @@ export const App: React.FC = () => {
   const { menu, isLoading, isError, error } = useMenu();
   const { serverOffsetMs } = useServerTime();
   const { cartItems, cartVersion, cartCount, remainingStock } = useCart(menu?.ingredientStock);
+  const { orders } = useOrders();
 
   // Cart operations orchestrated via TanStack Query mutations
   const { addMutation, editMutation, removeMutation, checkoutMutation } = useCartMutations(cartVersion);
@@ -151,13 +154,10 @@ export const App: React.FC = () => {
             )}
 
             {activeTab === 'orders' && (
-              <div className="bg-white border border-slate-200 rounded-md p-8 shadow-xs text-center">
-                <History className="w-12 h-12 text-amber-500 mx-auto mb-3" />
-                <h2 className="text-xl font-bold text-slate-800">Completed Orders</h2>
-                <p className="text-sm text-slate-500 mt-1">
-                  Historical orders and JSON download will be displayed here in Step 07.
-                </p>
-              </div>
+              <OrdersView
+                orders={orders}
+                onSwitchToBuilder={() => setActiveTab('builder')}
+              />
             )}
 
             {activeTab === 'assistant' && (

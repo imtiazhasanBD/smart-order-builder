@@ -13,7 +13,7 @@ This register tracks critical architectural, business logic, and trade-off decis
 | D1 | Concurrent stock behavior | Decided |
 | D2 | Price lock timing | Decided |
 | D3 | Reservation expiry during edit | Decided |
-| D4 | Order ID/timestamp ownership and duplicate Pay prevention | Pending |
+| D4 | Order ID/timestamp ownership and duplicate Pay prevention | Decided |
 | D5 | Best customer data limitation | Pending |
 | D6 | Order JSON schema and coupon recording | Decided |
 
@@ -89,11 +89,14 @@ I chose this because stock needs to be reserved immediately to prevent overselli
 ---
 
 ### D4: Order ID/Timestamp Ownership and Duplicate Pay Prevention
-- **Decision**: Determine whether client or server generates canonical order identifiers and timestamps, and how idempotent checkout is enforced.
-- **Selected approach**: Pending
-- **Reasoning**: Pending
-- **Trade-offs**: Pending
-- **Status**: Pending
+
+**Decision:** The server generates the order ID and `createdAt` timestamp. The client sends an idempotency key with each checkout request to prevent duplicate orders.
+
+**Reasoning:** The browser clock may be incorrect, so the server should control order IDs and timestamps. If the user clicks Pay multiple times, the server checks the idempotency key and returns the existing order instead of creating another one. This ensures stock is deducted only once.
+
+**Trade-off:** The server needs to keep track of previously used idempotency keys so repeated requests don't create duplicate orders.
+
+**Status:** Decided
 
 ---
 

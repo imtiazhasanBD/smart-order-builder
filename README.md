@@ -192,7 +192,8 @@ src/
   - `src/test/pricingEngine.test.ts` (7 tests): Acceptance criteria TC-05, TC-06, TC-07, Q2, Q3, Q4, and MSW `/api/price` integration.
   - `src/test/orderBuilder.test.tsx` (7 tests): Order builder UI integration, live validation alerts, stock button disabling at 0, Item Qty, and TC-12 out-of-order price response handling.
   - `src/test/cartReservations.test.tsx` (4 tests): Rapid clicks idempotency (TC-13), atomic mid-way reservation failure and zero-stock held (TC-14), 5-minute timer expiry with stock release and read-only UI (TC-15), and duplicate pay click prevention (TC-16).
-- **Test Count**: 38 passed tests across 7 test suites.
+  - `src/test/ordersStorage.test.tsx` (3 tests): Checkout persistence in documented D6 shape (TC-17), OrdersView rendering, empty state, and JSON download trigger.
+- **Test Count**: 41 passed tests across 8 test suites.
 
 ### Planned Testing Coverage
 - Pure engine unit tests covering TC-01 through TC-11.
@@ -227,7 +228,7 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 - [x] Step 04: Pricing engine
 - [x] Step 05: Order builder interface
 - [x] Step 06: Cart and reservation lifecycle
-- [ ] Step 07: Checkout, order storage, and JSON export
+- [x] Step 07: Checkout, order storage, and JSON export
 - [ ] Step 08: Sales analytics engine
 - [ ] Step 09: Gemini assistant integration
 - [ ] Step 10: Full acceptance test suite (TC-01 to TC-20)
@@ -250,7 +251,7 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 | Step 04 | Pricing engine | 1 hour |
 | Step 05 | Order builder UI | 1.5 hour |
 | Step 06 | Reservations and cart | 40 Mins |
-| Step 07 | Checkout and order persistence | Pending |
+| Step 07 | Checkout and order persistence | 30 Mins |
 | Step 08 | Sales analytics | Pending |
 | Step 09 | Gemini assistant | Pending |
 | Step 10 | Acceptance tests and documentation | Pending |

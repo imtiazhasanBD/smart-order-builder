@@ -122,7 +122,11 @@ export class MockServerStore {
           lineTotalPoisha: pricing.unitSubtotalPoisha * l.qty,
           lineTotalBDT: pricing.finalUnitPriceBDT * l.qty,
         })),
-        pricing,
+        pricing: {
+          ...pricing,
+          subtotalPoisha: pricing.cartSubtotalPoisha,
+          subtotalBDT: pricing.cartSubtotalBDT,
+        },
       };
 
       return stored;
@@ -451,7 +455,11 @@ export class MockServerStore {
         lineTotalPoisha: pricing.unitSubtotalPoisha * item.qty,
         lineTotalBDT: pricing.finalUnitPriceBDT * item.qty,
       })),
-      pricing,
+      pricing: {
+        ...pricing,
+        subtotalPoisha: pricing.cartSubtotalPoisha,
+        subtotalBDT: pricing.cartSubtotalBDT,
+      },
     };
 
     // Save order and empty cart
@@ -474,6 +482,9 @@ export class MockServerStore {
   }
 
   public reset(): void {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.removeItem(STORAGE_ORDERS_KEY);
+    }
     this.menu = JSON.parse(JSON.stringify(MENU_FIXTURE));
     this.cartVersion = 1;
     this.cartItems.clear();

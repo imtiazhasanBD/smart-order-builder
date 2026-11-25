@@ -163,13 +163,41 @@ export interface StoredOrderLine {
   lineTotalBDT: number;
 }
 
+export interface StoredOrderPricing {
+  currency: 'BDT';
+  cartSubtotalPoisha?: number;
+  cartSubtotalBDT?: number;
+  subtotalPoisha?: number;
+  subtotalBDT?: number;
+  appliedDiscount: {
+    type: 'C1' | 'C2' | 'NONE';
+    name: string;
+    amountPoisha?: number;
+    amountBDT?: number;
+    discountPoisha?: number;
+    discountBDT?: number;
+  };
+  couponStatus: {
+    code: string | null;
+    entered: boolean;
+    applied: boolean;
+    reason?: string;
+  };
+  discountedSubtotalPoisha?: number;
+  discountedSubtotalBDT?: number;
+  vatPoisha: number;
+  vatBDT?: number;
+  payablePoisha: number;
+  payableBDT: number;
+}
+
 export interface StoredOrder {
   id: string;
   createdAt: string;
   paymentMethod: PaymentMethod;
   couponCode: string | null;
   lines: StoredOrderLine[];
-  pricing: PricingBreakdown;
+  pricing?: StoredOrderPricing;
 }
 
 export interface SeedOrderLine {
