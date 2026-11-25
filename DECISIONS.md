@@ -10,7 +10,7 @@ This register tracks critical architectural, business logic, and trade-off decis
 |---|---|---|
 | C1 | Money representation and rounding | Pending |
 | C2 | Supported chatbot questions and analytics function contract | Pending |
-| D1 | Concurrent stock behavior | Pending |
+| D1 | Concurrent stock behavior | Decided |
 | D2 | Price lock timing | Pending |
 | D3 | Reservation expiry during edit | Pending |
 | D4 | Order ID/timestamp ownership and duplicate Pay prevention | Pending |
@@ -40,11 +40,22 @@ This register tracks critical architectural, business logic, and trade-off decis
 ---
 
 ### D1: Concurrent Stock Behavior
-- **Decision**: Define application and UI behavior when available stock is depleted by a concurrent session during active edit.
-- **Selected approach**: Pending
-- **Reasoning**: Pending
-- **Trade-offs**: Pending
-- **Status**: Pending
+
+**Decision:** Keep the user's changes when stock runs out in another tab.
+
+**Selected approach:**
+
+If Tab A is editing an item and Tab B takes the remaining stock, Tab A will get a 409 Conflict when saving. The error will show which ingredient is no longer available. The edit modal will stay open with the user's previous selections intact, so they can adjust the item and try again. Available stock and option limits will also be updated.
+
+**Reasoning:**
+
+Closing the modal or clearing the form would force the customer to configure the item again. Keeping their selections makes it easier to fix only the options affected by the stock shortage. The server will validate the updated stock before accepting the changes.
+
+**Trade-offs:**
+
+The frontend needs to refresh stock information without losing the current form state. This adds some state management work, but provides a better editing experience.
+
+**Status:** Decided
 
 ---
 

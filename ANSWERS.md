@@ -3,11 +3,33 @@
 This document records the solutions and calculation proofs for technical assessment questions Q1 through Q8. Each answer is verified through automated tests once the underlying engines are implemented.
 
 ---
+## Q1. Maximum Units of Item C from an Empty Cart
 
-### Q1. Maximum Units of Item C from Empty Cart
-- **Objective**: Determine the maximum quantity of Item C that can be added starting from an initial stock state, identifying the strict bottleneck ingredient.
-- **Status**: Pending verification
-- **Calculation**: Pending
+**Answer:** 2 units. Cheese is the limiting ingredient.
+
+**Verification:** `npm test src/test/stockEngine.test.ts`
+
+**Calculation:**
+
+Item C uses the following ingredients per unit:
+
+| Ingredient | Required per Item | Available Stock | Maximum Units |
+|---|---:|---:|---:|
+| Cheese | 2 | 4 | 2 |
+| Egg | 2 | 10 | 5 |
+| Tofu | 1 | 5 | 5 |
+| Paratha | 1 | 10 | 10 |
+| Baked Beans | 1 | 8 | 8 |
+| Mushroom | 1 | 6 | 6 |
+| Chili | 0 | — | No stock limit |
+
+Cheese allows only 2 units because each Item C requires 2 cheese, while the initial stock is 4.
+
+Adding a third Item C would require 6 cheese in total, exceeding the available stock by 2.
+
+Therefore, the maximum is **2 units**, limited by Cheese.
+
+
 
 ---
 

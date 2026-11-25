@@ -127,8 +127,13 @@ src/
 - **Test Coverage**: Tested in `src/test/rulesEngine.test.ts` covering TC-01 through TC-04, empty configurations, and group constraint edge cases.
 
 ### 2. Inventory / Stock Engine (`src/engines/inventory/`)
-- **Status**: Planned for Step 03
-- **Purpose**: Tracks physical ingredient availability pooled across all cart items and active builders. Computes remaining limits, supports net-difference editing, and reports itemized shortages.
+- **Status**: Implemented (`src/engines/inventory/stock.ts`)
+- **Key Functions**:
+  - `calculateAvailableStock(totalStock, cart, optionLookup, excludeCartItemId?)`: Evaluates remaining unreserved physical stock across all cart lines.
+  - `calculateOptionRemaining(optionId, availableStock, optionLookup)`: Computes how many more units of an option can be added right now based on its ingredient usage (returns `Infinity` for zero-stock options like sauces).
+  - `checkStockForConfig(config, qty, availableStock, optionLookup)`: Validates configuration quantity against available stock and itemizes every shortage (e.g. `"Short: 2 egg, 2 cheese"`).
+- **Net-Difference Editing**: Passing `excludeCartItemId` counts an item's own currently held allocation as available to itself, preventing double-counting or false shortages when modifying an order.
+- **Test Coverage**: Tested in `src/test/stockEngine.test.ts` covering TC-08 through TC-11 and Q1 verification.
 
 ### 3. Pricing Engine (`src/engines/pricing/`)
 - **Status**: Planned for Step 04
@@ -170,14 +175,15 @@ src/
 
 ## 5.9 Testing
 
-### Current Testing Setup (Step 02)
+### Current Testing Setup (Step 03)
 - **Harness**: Vitest with `jsdom` environment.
 - **Setup File**: `src/test/setup.ts` with `@testing-library/jest-dom` extensions and MSW test server lifecycle (`server.listen()`, `server.resetHandlers()`, `server.close()`).
 - **Test Suites**:
   - `src/test/smoke.test.tsx` (1 test): Application mount and render smoke test.
   - `src/test/menuApi.test.ts` (2 tests): `/api/menu` Appendix A fixture verification and 90-second server time offset.
   - `src/test/rulesEngine.test.ts` (9 tests): Acceptance criteria TC-01 to TC-04, override precedence, distinct/per-option limits, and edge cases.
-- **Test Count**: 12 passed tests across 3 test suites.
+  - `src/test/stockEngine.test.ts` (7 tests): Acceptance criteria TC-08 to TC-11, net-difference editing, option remaining calculations, and Q1 verification.
+- **Test Count**: 19 passed tests across 4 test suites.
 
 ### Planned Testing Coverage
 - Pure engine unit tests covering TC-01 through TC-11.
@@ -191,14 +197,14 @@ src/
 Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/media/imtiazbd/Development/HTML/New_Devolop/Smart-Order-Builder/DECISIONS.md):
 - **C1**: Integer Poisha vs. JavaScript floating point
 - **C2**: Chatbot query surface and deterministic tool contracts
-- **D1**: Concurrent stock depletion handling
+- **D1**: Concurrent stock depletion handling (Decided in Step 03)
 - **D2**: Promotional price lock timing
 - **D3**: Reservation expiry during active modification
 - **D4**: Canonical order ID and timestamp ownership
 - **D5**: Customer data limitations and anti-hallucination guardrails
 - **D6**: Order JSON schema and coupon auditing (Decided in Step 01)
 
-*(Decisions C1, C2, and D1–D5 remain marked Pending until their respective implementation milestones.)*
+*(Decisions C1, C2, D2, D3, D4, and D5 remain marked Pending until their respective implementation milestones.)*
 
 ---
 
@@ -208,7 +214,7 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 - [x] Step 00: Project foundation, toolchain, styling, and documentation
 - [x] Step 01: Mock API, menu fixtures, and data contracts
 - [x] Step 02: Validation / Rules engine
-- [ ] Step 03: Inventory / Stock engine
+- [x] Step 03: Inventory / Stock engine
 - [ ] Step 04: Pricing engine
 - [ ] Step 05: Order builder interface
 - [ ] Step 06: Cart and reservation lifecycle
@@ -231,7 +237,7 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 | Step 00 | Project setup and foundation | 10 Mins |
 | Step 01 | Mock API and menu fixtures | 40 Mins |
 | Step 02 | Validation engine | 15 Mins |
-| Step 03 | Inventory engine | Pending |
+| Step 03 | Inventory engine | 40 Mins |
 | Step 04 | Pricing engine | Pending |
 | Step 05 | Order builder UI | Pending |
 | Step 06 | Reservations and cart | Pending |
@@ -252,6 +258,6 @@ Calculations for questions Q1 through Q8 are tracked in [ANSWERS.md](file:///run
 
 ## 5.14 Project Status
 
-- **Latest Completed Milestone**: Step 01 (Mock API and Menu Fixtures)
-- **Current Milestone**: Step 02 (Validation / Rules Engine) — Ready for Review
-- **Next Milestone**: Step 03 (Inventory / Stock Engine)
+- **Latest Completed Milestone**: Step 02 (Validation / Rules Engine)
+- **Current Milestone**: Step 03 (Inventory / Stock Engine) — Ready for Review
+- **Next Milestone**: Step 04 (Pricing Engine)
