@@ -26,6 +26,7 @@ import {
   ChevronUp,
   Receipt,
 } from 'lucide-react';
+import { IngredientIcon } from '@/components/IngredientIcon';
 
 export interface OrderBuilderProps {
   menu: MenuResponse;
@@ -298,7 +299,10 @@ export const OrderBuilder: React.FC<OrderBuilderProps> = ({
                   className={`w-full text-left flex flex-wrap items-center justify-between gap-2 cursor-pointer transition-colors ${!isCollapsed ? 'border-b border-slate-100 pb-3 mb-4' : ''
                     }`}
                 >
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-200/80 p-1 flex items-center justify-center shrink-0">
+                      <IngredientIcon id={group.id} size="sm" alt={group.name} />
+                    </div>
                     <h3 className="font-bold text-slate-800 text-lg">{group.name}</h3>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-md font-medium transition-colors ${groupTotal > 0
@@ -368,27 +372,42 @@ export const OrderBuilder: React.FC<OrderBuilderProps> = ({
                           data-testid={`option-card-${opt.id}`}
                         >
                           <div>
-                            <div className="flex items-start justify-between gap-1">
-                              <span className="font-semibold text-slate-900 text-sm">{opt.name}</span>
-                              <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-sm">
-                                {opt.priceBDT === 0 ? 'Free' : `+${opt.priceBDT} BDT`}
-                              </span>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-200/60 p-1 flex items-center justify-center shrink-0">
+                                  <IngredientIcon id={opt.id} size="sm" alt={opt.name} />
+                                </div>
+                                <div className="min-w-0">
+                                  <span className="font-semibold text-slate-900 text-sm block leading-tight truncate">
+                                    {opt.name}
+                                  </span>
+                                  <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded-xs inline-block mt-0.5">
+                                    {opt.priceBDT === 0 ? 'Free' : `+${opt.priceBDT} BDT`}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
 
                             {/* Ingredients usage and remaining units display */}
-                            <div className="mt-1 flex items-center justify-between text-xs text-slate-500">
-                              <span>
+                            <div className="mt-2.5 flex items-center justify-between text-xs text-slate-500 pt-1.5 border-t border-slate-100">
+                              <div className="flex items-center gap-1.5 flex-wrap">
                                 {opt.ingredients && Object.keys(opt.ingredients).length > 0 ? (
-                                  Object.entries(opt.ingredients)
-                                    .map(([ing, amt]) => `${amt} ${ing}`)
-                                    .join(', ')
+                                  Object.entries(opt.ingredients).map(([ing, amt]) => (
+                                    <span
+                                      key={ing}
+                                      className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 text-[11px] font-medium px-1.5 py-0.5 rounded-sm"
+                                    >
+                                      <IngredientIcon id={ing} size="xs" alt={ing} className="w-3.5 h-3.5 inline-block" />
+                                      <span>{amt} {ing}</span>
+                                    </span>
+                                  ))
                                 ) : (
                                   <span className="text-slate-400">Unlimited stock</span>
                                 )}
-                              </span>
+                              </div>
 
                               <span
-                                className={`font-medium ${isStockDepleted
+                                className={`font-medium shrink-0 ml-1.5 ${isStockDepleted
                                   ? 'text-rose-600 font-bold'
                                   : 'text-emerald-700'
                                   }`}
@@ -566,6 +585,32 @@ export const OrderBuilder: React.FC<OrderBuilderProps> = ({
                 </span>
               </div>
 
+              {/* Selected Ingredients Breakdown with Flaticon Icons */}
+              {hasSelections && (
+                <div className="bg-slate-50/80 rounded-md border border-slate-100 p-2 space-y-1.5 my-1 max-h-36 overflow-y-auto">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Selected Ingredients
+                  </span>
+                  {Object.entries(config)
+                    .filter(([_, q]) => q > 0)
+                    .map(([optId, q]) => {
+                      const opt = optionLookup.get(optId);
+                      if (!opt) return null;
+                      return (
+                        <div key={optId} className="flex items-center justify-between text-xs text-slate-700">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <IngredientIcon id={optId} size="xs" className="w-3.5 h-3.5" />
+                            <span className="truncate">{q}× {opt.name}</span>
+                          </div>
+                          <span className="text-slate-500 font-medium shrink-0 ml-1.5 text-[11px]">
+                            {opt.priceBDT === 0 ? 'Free' : `+${(opt.priceBDT * q).toFixed(2)} BDT`}
+                          </span>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+
               <div className="border-t border-slate-100 my-1 lg:my-2" />
 
               <div className="flex items-center justify-between font-bold text-slate-900 text-xs lg:text-sm">
@@ -722,9 +767,14 @@ export const OrderBuilder: React.FC<OrderBuilderProps> = ({
             </div>
 
             {/* Footer Note */}
-            <div className="hidden lg:flex text-center text-[11px] text-slate-400 items-center justify-center gap-1.5 pt-1">
-              <Info className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              <span>Prices are from live pricing engine</span>
+            <div className="hidden lg:flex flex-col items-center justify-center gap-0.5 text-center text-[11px] text-slate-400 pt-1">
+              <div className="flex items-center gap-1.5">
+                <Info className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <span>Prices are from live pricing engine</span>
+              </div>
+              <div className="text-[10px] text-slate-400">
+                Vector ingredient icons &amp; stock engine
+              </div>
             </div>
           </div>
         </div>
