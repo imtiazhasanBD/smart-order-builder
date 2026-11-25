@@ -118,8 +118,13 @@ src/
 *Status: Planned (Not implemented in Step 00)*
 
 ### 1. Validation / Rules Engine (`src/engines/validation/`)
-- **Status**: Planned for Step 02
-- **Purpose**: Pure function `validate(config, groups, rules)` evaluating group bounds (`min`, `max`, `step`, `maxDistinct`, `maxPerOption`) and cross-group constraints (`requires`, `excludes`, `overrideLimit`). Returns all violations without short-circuiting.
+- **Status**: Implemented (`src/engines/validation/rules.ts`)
+- **Signature**: `validate(config: SelectedOptions, groups: Group[], rules: CrossGroupRule[]): Violation[]`
+- **Behavior**: Pure, data-driven function evaluating:
+  - Group limits: `min`, `max`, `step` (e.g. eggs in multiples of 2), `maxDistinct` (e.g. sauce max 2 distinct options), and `maxPerOption` (e.g. sauce max 1 per option).
+  - Cross-group rules: `requires` (e.g. Hollandaise requires Scrambled or Omelette), `excludes` (e.g. Tofu excludes Sausage & Bacon; Chili excludes Hollandaise), and `overrideLimit` (e.g. Croissant forces Extras max to 2, overriding the base limit of 4).
+  - Collects and returns all violations with their identifier and human-readable explanation without early exit.
+- **Test Coverage**: Tested in `src/test/rulesEngine.test.ts` covering TC-01 through TC-04, empty configurations, and group constraint edge cases.
 
 ### 2. Inventory / Stock Engine (`src/engines/inventory/`)
 - **Status**: Planned for Step 03
@@ -165,13 +170,14 @@ src/
 
 ## 5.9 Testing
 
-### Current Testing Setup (Step 01)
+### Current Testing Setup (Step 02)
 - **Harness**: Vitest with `jsdom` environment.
 - **Setup File**: `src/test/setup.ts` with `@testing-library/jest-dom` extensions and MSW test server lifecycle (`server.listen()`, `server.resetHandlers()`, `server.close()`).
 - **Test Suites**:
-  - `src/test/smoke.test.tsx` verifying React rendering and DOM matchers.
-  - `src/test/menuApi.test.ts` verifying `/api/menu` Appendix A fixture integrity and the 90-second server clock offset.
-- **Test Count**: 3 passed tests across 2 test suites.
+  - `src/test/smoke.test.tsx` (1 test): Application mount and render smoke test.
+  - `src/test/menuApi.test.ts` (2 tests): `/api/menu` Appendix A fixture verification and 90-second server time offset.
+  - `src/test/rulesEngine.test.ts` (9 tests): Acceptance criteria TC-01 to TC-04, override precedence, distinct/per-option limits, and edge cases.
+- **Test Count**: 12 passed tests across 3 test suites.
 
 ### Planned Testing Coverage
 - Pure engine unit tests covering TC-01 through TC-11.
@@ -201,7 +207,7 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 ### Status Checklist
 - [x] Step 00: Project foundation, toolchain, styling, and documentation
 - [x] Step 01: Mock API, menu fixtures, and data contracts
-- [ ] Step 02: Validation / Rules engine
+- [x] Step 02: Validation / Rules engine
 - [ ] Step 03: Inventory / Stock engine
 - [ ] Step 04: Pricing engine
 - [ ] Step 05: Order builder interface
@@ -224,7 +230,7 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 |---|---|---|
 | Step 00 | Project setup and foundation | 10 Mins |
 | Step 01 | Mock API and menu fixtures | 40 Mins |
-| Step 02 | Validation engine | Pending |
+| Step 02 | Validation engine | 15 Mins |
 | Step 03 | Inventory engine | Pending |
 | Step 04 | Pricing engine | Pending |
 | Step 05 | Order builder UI | Pending |
@@ -246,6 +252,6 @@ Calculations for questions Q1 through Q8 are tracked in [ANSWERS.md](file:///run
 
 ## 5.14 Project Status
 
-- **Latest Completed Milestone**: Step 00 (Project Foundation)
-- **Current Milestone**: Step 01 (Mock API and Menu Fixtures) — Ready for Review
-- **Next Milestone**: Step 02 (Validation / Rules Engine)
+- **Latest Completed Milestone**: Step 01 (Mock API and Menu Fixtures)
+- **Current Milestone**: Step 02 (Validation / Rules Engine) — Ready for Review
+- **Next Milestone**: Step 03 (Inventory / Stock Engine)
