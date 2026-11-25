@@ -31,9 +31,9 @@ Smart Order Builder is a frontend technical assessment application designed to d
 - **Server State Management**: TanStack Query (`@tanstack/react-query`) with shared QueryClient and provider
 - **Test Runner & Environment**: Vitest, JSDOM (`jsdom`)
 - **Component Testing**: React Testing Library (`@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`)
+- **API Simulation**: Mock Service Worker (MSW) (`msw`) configured for browser worker and Node test server
 
 ### Planned Technologies (Future Steps)
-- **API Simulation**: Mock Service Worker (MSW) — *Planned for Step 01*
 - **Conversational Assistant**: Google Gemini API via function calling — *Planned for Step 09*
 
 ---
@@ -133,11 +133,12 @@ src/
 
 ## 5.6 Data and API Architecture
 
-*Status: Planned (Not implemented in Step 00)*
-
-- **Mock API**: MSW handlers simulating REST endpoints (`/menu`, `/price`, `/cart/reserve`, `/orders`).
-- **Simulated Latency**: 200–1500 ms with randomized 15% failure rate to test race conditions and resilience.
-- **Server State**: Managed via `@tanstack/react-query` to handle caching, background invalidation, and request deduplication.
+- **Mock API (MSW)**: Configured with interceptors in `src/mocks/handlers/menu.ts` serving `/api/menu` and `/api/time`.
+- **Data Fixtures**: Complete Appendix A fixture in `src/mocks/data/menu.ts` and Appendix B seed orders in `src/mocks/data/orders.seed.json`.
+- **Server Clock Simulation**: `MockServerStore` maintains simulated server time running 90 seconds ahead of client time (`SERVER_OFFSET_MS = 90000`).
+- **Data-Driven Contracts**: Strict TypeScript interfaces in `src/types/index.ts` guarantee no hardcoded option IDs, limits, or pricing in client code.
+- **Client Transport**: Typed fetch service in `src/services/api.ts` providing `fetchMenu()` and `fetchServerTime()`.
+- **Planned Endpoints**: Interactive price calculation (`/api/price`), atomic stock reservation (`/api/cart/reserve`), and checkout (`/api/orders`) planned for Steps 04–07.
 
 ---
 
@@ -164,10 +165,13 @@ src/
 
 ## 5.9 Testing
 
-### Current Testing Setup (Step 00)
+### Current Testing Setup (Step 01)
 - **Harness**: Vitest with `jsdom` environment.
-- **Setup File**: `src/test/setup.ts` with `@testing-library/jest-dom` extensions.
-- **Verification**: `src/test/smoke.test.tsx` verifying React rendering and DOM matchers.
+- **Setup File**: `src/test/setup.ts` with `@testing-library/jest-dom` extensions and MSW test server lifecycle (`server.listen()`, `server.resetHandlers()`, `server.close()`).
+- **Test Suites**:
+  - `src/test/smoke.test.tsx` verifying React rendering and DOM matchers.
+  - `src/test/menuApi.test.ts` verifying `/api/menu` Appendix A fixture integrity and the 90-second server clock offset.
+- **Test Count**: 3 passed tests across 2 test suites.
 
 ### Planned Testing Coverage
 - Pure engine unit tests covering TC-01 through TC-11.
@@ -186,9 +190,9 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 - **D3**: Reservation expiry during active modification
 - **D4**: Canonical order ID and timestamp ownership
 - **D5**: Customer data limitations and anti-hallucination guardrails
-- **D6**: Order JSON schema and coupon auditing
+- **D6**: Order JSON schema and coupon auditing (Decided in Step 01)
 
-*(All decisions currently remain marked Pending until their respective milestones.)*
+*(Decisions C1, C2, and D1–D5 remain marked Pending until their respective implementation milestones.)*
 
 ---
 
@@ -196,7 +200,7 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 
 ### Status Checklist
 - [x] Step 00: Project foundation, toolchain, styling, and documentation
-- [ ] Step 01: Mock API, menu fixtures, and data contracts
+- [x] Step 01: Mock API, menu fixtures, and data contracts
 - [ ] Step 02: Validation / Rules engine
 - [ ] Step 03: Inventory / Stock engine
 - [ ] Step 04: Pricing engine
@@ -218,8 +222,8 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 
 | Milestone | Work performed | Actual time |
 |---|---|---|
-| Step 00 | Project setup and foundation | Pending |
-| Step 01 | Mock API and menu fixtures | Pending |
+| Step 00 | Project setup and foundation | 10 Mins |
+| Step 01 | Mock API and menu fixtures | 40 Mins |
 | Step 02 | Validation engine | Pending |
 | Step 03 | Inventory engine | Pending |
 | Step 04 | Pricing engine | Pending |
@@ -242,6 +246,6 @@ Calculations for questions Q1 through Q8 are tracked in [ANSWERS.md](file:///run
 
 ## 5.14 Project Status
 
-- **Latest Completed Milestone**: None
-- **Current Milestone**: Step 00 (Project Foundation) — In Progress
-- **Next Milestone**: Step 01 (Mock API and Menu Fixtures)
+- **Latest Completed Milestone**: Step 00 (Project Foundation)
+- **Current Milestone**: Step 01 (Mock API and Menu Fixtures) — Ready for Review
+- **Next Milestone**: Step 02 (Validation / Rules Engine)

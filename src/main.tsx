@@ -4,10 +4,21 @@ import { App } from '@/app/App';
 import { AppProviders } from '@/app/providers';
 import '@/index.css';
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <AppProviders>
-      <App />
-    </AppProviders>
-  </React.StrictMode>
-);
+async function prepareApp(): Promise<void> {
+  if (import.meta.env.DEV) {
+    const { worker } = await import('@/mocks/browser');
+    await worker.start({
+      onUnhandledRequest: 'bypass',
+    });
+  }
+}
+
+prepareApp().then(() => {
+  ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+    <React.StrictMode>
+      <AppProviders>
+        <App />
+      </AppProviders>
+    </React.StrictMode>
+  );
+});
