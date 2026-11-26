@@ -1,10 +1,10 @@
-# Smart Order Builder
+# Smart Order Builder 🍳
 
-Smart Order Builder is a frontend technical assessment application designed to demonstrate data-driven configuration validation, shared ingredient-based inventory reservations, deterministic financial calculations, and an AI-powered sales assistant.
+Smart Order Builder is a frontend technical assessment application demonstrating data-driven configuration validation, shared ingredient-based inventory reservations, deterministic financial calculations, and an AI-powered sales assistant.
 
 ---
 
-## 5.1 Project Overview
+## Project Overview
 
 - **Project Name**: Smart Order Builder
 - **Description**: A modular frontend system allowing customers to customize breakfast orders under cross-group rules and real-time inventory limits, alongside a conversational sales analytics assistant for staff.
@@ -15,30 +15,27 @@ Smart Order Builder is a frontend technical assessment application designed to d
   - Exact financial calculations using integer poisha to eliminate floating-point rounding errors.
   - Idempotent cart and checkout lifecycles synchronized with a simulated server clock.
   - Conversational analytics powered by Gemini Function Calling without delegating calculations to the model.
-- **Current Implementation Status**: Step 00 (Project Foundation) is currently in progress. Assessment features (Parts A–G) are planned for subsequent milestones.
+- **Implementation Status**: **100% Complete** — All 12 milestones (Steps 00 to 11, including all Part G bonus features) are fully implemented, tested, and verified.
 
 ---
 
-## 5.2 Technology Stack
+## Technology Stack
 
-### Currently Installed & Configured (Step 00)
 - **Framework & Runtime**: React 18 (`react`, `react-dom`)
 - **Language**: TypeScript with strict mode enabled
 - **Bundler & Tooling**: Vite (`@vitejs/plugin-react`)
 - **Styling**: Tailwind CSS, PostCSS, Autoprefixer
-- **UI Primitives**: shadcn/ui foundation (`clsx`, `tailwind-merge`, `class-variance-authority`, `components.json`)
+- **UI Primitives**: shadcn/ui foundation (`clsx`, `tailwind-merge`, `class-variance-authority`)
 - **Icons**: Lucide React (`lucide-react`)
-- **Server State Management**: TanStack Query (`@tanstack/react-query`) with shared QueryClient and provider
+- **Server State Management**: TanStack Query (`@tanstack/react-query`) with shared QueryClient
 - **Test Runner & Environment**: Vitest, JSDOM (`jsdom`)
 - **Component Testing**: React Testing Library (`@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`)
 - **API Simulation**: Mock Service Worker (MSW) (`msw`) configured for browser worker and Node test server
-
-### Planned Technologies (Future Steps)
-- **Conversational Assistant**: Google Gemini API via function calling — *Planned for Step 09*
+- **Conversational Assistant**: Google Gemini Flash API (`@google/genai`) with function calling
 
 ---
 
-## 5.3 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js 18+ or 20+ (Node v22 recommended)
@@ -67,11 +64,11 @@ npm run dev
 
 ### Running Tests
 ```bash
+# Run tests once (full suite)
+npm test -- --run
+
 # Run tests in watch mode
 npm test
-
-# Run tests once
-npm run test:run
 ```
 
 ### Production Build
@@ -81,41 +78,36 @@ npm run build
 
 ---
 
-## 5.4 Project Architecture
+## Project Architecture
 
 The codebase is organized into modular boundaries separating pure domain logic, UI features, and data management:
 
 ```
 src/
 ├── app/                  # Application root, routing, and global providers
-├── components/           # Shared, domain-agnostic UI primitives (shadcn/ui)
+├── components/           # Shared, domain-agnostic UI primitives (shadcn/ui, icons)
 ├── features/             # Feature-specific components and UI logic
-│   ├── menu/             # Menu presentation
-│   ├── configurator/     # Interactive item customization
-│   ├── cart/             # Shopping cart and active reservations
-│   ├── checkout/         # Order placement and payment selection
+│   ├── configurator/     # Interactive item customization & live breakdown
+│   ├── cart/             # Shopping cart and active 5-min reservations
+│   ├── orders/           # Completed orders view, pagination & JSON export
 │   └── assistant/        # Conversational staff assistant interface
 ├── engines/              # Pure domain logic (completely decoupled from React)
-│   ├── validation/       # Rules and constraint validation
+│   ├── validation/       # Rules and constraint validation engine
 │   ├── inventory/        # Ingredient stock calculations and net difference
 │   ├── pricing/          # Financial calculations, promotions, and taxes
 │   └── analytics/        # Deterministic statistical tools for assistant
 ├── mocks/                # API simulation layer
-│   ├── data/             # Static fixtures and seed datasets
-│   └── handlers/         # MSW request interceptors
+│   ├── data/             # Static fixtures (Appendix A) and seed datasets
+│   └── handlers/         # MSW request interceptors (menu, cart, price, orders)
 ├── services/             # API client functions and transport layer
 ├── types/                # Domain models, schema definitions, and contracts
-├── lib/                  # Shared utilities (e.g., cn styling helper)
-└── test/                 # Test harness, custom matchers, and smoke tests
+├── lib/                  # Shared utilities (syncChannel, styling helpers)
+└── test/                 # Vitest acceptance suites (TC-01 through TC-20)
 ```
-
-*Note: In Step 00, domain feature folders contain structure markers (`.gitkeep`). Implementations will be added in their respective milestones.*
 
 ---
 
-## 5.5 Business Logic Engines
-
-*Status: Planned (Not implemented in Step 00)*
+## Business Logic Engines
 
 ### 1. Validation / Rules Engine (`src/engines/validation/`)
 - **Status**: Implemented (`src/engines/validation/rules.ts`)
@@ -147,44 +139,40 @@ src/
 
 ---
 
-## 5.6 Data and API Architecture
+## Data & API Architecture
 
-- **Mock API (MSW)**: Configured with interceptors in `src/mocks/handlers/menu.ts` serving `/api/menu` and `/api/time`.
+- **Mock API (MSW)**: Configured with interceptors in `src/mocks/handlers/` serving `/api/menu`, `/api/time`, `/api/cart`, `/api/price`, and `/api/orders`.
 - **Data Fixtures**: Complete Appendix A fixture in `src/mocks/data/menu.ts` and Appendix B seed orders in `src/mocks/data/orders.seed.json`.
 - **Server Clock Simulation**: `MockServerStore` maintains simulated server time running 90 seconds ahead of client time (`SERVER_OFFSET_MS = 90000`).
 - **Data-Driven Contracts**: Strict TypeScript interfaces in `src/types/index.ts` guarantee no hardcoded option IDs, limits, or pricing in client code.
-- **Client Transport**: Typed fetch service in `src/services/api.ts` providing `fetchMenu()` and `fetchServerTime()`.
-- **Planned Endpoints**: Interactive price calculation (`/api/price`), atomic stock reservation (`/api/cart/reserve`), and checkout (`/api/orders`) planned for Steps 04–07.
+- **Client Transport**: Typed fetch service in `src/services/api.ts`.
+- **Cross-Tab Synchronized Mock Storage**: MSW stores active cart reservations, sold stock, and completed orders in persistent shared storage so open tabs reflect changes in real time.
 
 ---
 
-## 5.7 Cart, Reservation and Checkout
+## Cart, Reservations & Checkout
 
-*Status: Planned (Not implemented in Step 00)*
-
-- **Atomic Reservations**: Ingredient stock held for 5 minutes per cart item.
+- **Atomic Reservations**: Ingredient stock held for 5 minutes per cart item; atomic all-or-nothing stock checks prevent phantom holds.
 - **Clock Synchronization**: Timer offsets computed against simulated server time running 90 seconds ahead of client.
 - **Idempotency**: Add-to-cart and Pay operations protected by client-generated idempotency keys.
-- **Order Persistence**: Completed orders saved to browser storage and exportable via `orders.json`.
+- **Order Persistence**: Completed orders saved to browser storage and exportable via `orders.json` (D6 format).
 
 ---
 
-## 5.8 Assistant / Chatbot Architecture
-
-*Status: Planned (Not implemented in Step 00)*
+## Sales Assistant AI (Gemini)
 
 - **Integration**: Google Gemini Flash model utilizing strict Function Calling.
 - **Deterministic Math**: The model is prohibited from calculating totals directly; all numbers are computed by pure analytical functions (`src/engines/analytics/`).
 - **Data Guardrails**: Inquiries regarding untracked attributes (such as customer identity) trigger factual refusals rather than hallucinated responses.
+- **Bilingual Support**: Understands and answers accurately in both English and Bengali (বাংলা).
 
 ---
 
-## 5.9 Testing
+## Automated Test Suite
 
-### Current Testing Setup (Step 11 — Complete)
 - **Harness**: Vitest with `jsdom` environment.
-- **Setup File**: `src/test/setup.ts` with `@testing-library/jest-dom` extensions and MSW test server lifecycle (`server.listen()`, `server.resetHandlers()`, `server.close()`).
-- **Test Suites**:
+- **Setup File**: `src/test/setup.ts` with `@testing-library/jest-dom` extensions and MSW test server lifecycle.
+- **Test Suites (12 Suites, 84 Tests)**:
   - `src/test/acceptanceE2E.test.tsx` (21 tests): Authoritative end-to-end acceptance suite verifying all 20 technical requirements: TC-01 to TC-04 (validation engine), TC-05 to TC-07 (pricing in integer poisha & promo rules), TC-08 to TC-11 (shared stock & net-difference), TC-12 (out-of-order pricing race handling), TC-13 to TC-16 (reservations, atomic failure, 5-min timer expiry, duplicate pay idempotency), TC-17 (order persistence & D6 export), TC-18 to TC-20 (Gemini function calling & D5 factual refusal).
   - `src/test/multiTabSync.test.tsx` (8 tests): Cross-tab BroadcastChannel & storage event synchronization, localStorage draft persistence/recovery, draft banner lifecycle, shared cart state persistence, and HTTP 409 conflict handling.
   - `src/test/smoke.test.tsx` (2 tests): Application mount, navbar brand rendering, and layout smoke test.
@@ -197,11 +185,11 @@ src/
   - `src/test/ordersStorage.test.tsx` (5 tests): Checkout persistence in documented D6 shape (TC-17), OrdersView rendering, pagination, page size selector, empty state, and JSON download trigger.
   - `src/test/analyticsEngine.test.ts` (8 tests): Deterministic analytics queries (Q5-Q8, order count, total revenue, best-selling option ranking, payment method breakdown, AOV, coupon stats, date filtering, and D5 factual refusal).
   - `src/test/assistantAi.test.tsx` (4 tests): Sales assistant integration tests covering TC-18 (order count diff after checkout), TC-19 (best-selling option tool call), TC-20 (anti-hallucination customer data refusal), and AssistantChat UI interaction.
-- **Test Count**: 84 passed tests across 12 test suites.
+- **Test Count**: **84 passed tests across 12 test suites**.
 
 ---
 
-## 5.10 Technical Trade-offs and Decisions
+## Technical Trade-offs and Decisions
 
 Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/media/imtiazbd/Development/HTML/New_Devolop/Smart-Order-Builder/DECISIONS.md):
 - **C1**: Integer Poisha vs. JavaScript floating point (Decided in Step 04)
@@ -217,9 +205,8 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 
 ---
 
-## 5.11 Unfinished Work and Limitations
+## Milestone Implementation Checklist
 
-### Status Checklist
 - [x] Step 00: Project foundation, toolchain, styling, and documentation
 - [x] Step 01: Mock API, menu fixtures, and data contracts
 - [x] Step 02: Validation / Rules engine
@@ -231,11 +218,11 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 - [x] Step 08: Sales analytics engine
 - [x] Step 09: Gemini assistant integration
 - [x] Step 10: Full acceptance test suite (TC-01 to TC-20)
-- [x] Step 11: Multi-tab sync and draft recovery bonus features
+- [x] Step 11: Multi-tab sync, shared cart storage, and draft recovery bonus features
 
 ---
 
-## 5.12 Time Spent — Actual Development Hours
+## Development Time Log
 
 | Milestone | Work performed | Actual time |
 |---|---|---|
@@ -255,14 +242,16 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 
 ---
 
-## 5.13 Assessment Answers
+## Assessment Answers (Q1 to Q8)
 
 Calculations for questions Q1 through Q8 are tracked and verified in [ANSWERS.md](file:///run/media/imtiazbd/Development/HTML/New_Devolop/Smart-Order-Builder/ANSWERS.md). All answers are fully verified with automated Vitest suites.
 
 ---
 
-## 5.14 Project Status
+## Project Status & Verification
 
-- **Latest Completed Milestone**: Step 11 (Bonus Features: Multi-Tab Broadcast Sync & Draft Recovery)
-- **Current Milestone**: All 12 Milestones (Steps 00 to 11) Completed & Fully Verified
-- **Overall Quality**: 84/84 Vitest tests passing; 0 TypeScript errors; Production build clean. Ready for final evaluation!
+- **Milestones**: All 12 Milestones (Steps 00 to 11) Completed & Fully Verified
+- **Automated Tests**: 84/84 Vitest tests passing across 12 test suites (`npm test -- --run`)
+- **TypeScript**: 0 type errors (`tsc --noEmit`)
+- **Production Bundle**: Clean Vite build (`npm run build`)
+- **Overall Status**: Production Ready & Fully Documented!
