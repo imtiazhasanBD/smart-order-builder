@@ -181,10 +181,11 @@ src/
 
 ## 5.9 Testing
 
-### Current Testing Setup (Step 06)
+### Current Testing Setup (Step 10)
 - **Harness**: Vitest with `jsdom` environment.
 - **Setup File**: `src/test/setup.ts` with `@testing-library/jest-dom` extensions and MSW test server lifecycle (`server.listen()`, `server.resetHandlers()`, `server.close()`).
 - **Test Suites**:
+  - `src/test/acceptanceE2E.test.tsx` (21 tests): Authoritative end-to-end acceptance suite verifying all 20 technical requirements: TC-01 to TC-04 (validation engine), TC-05 to TC-07 (pricing in integer poisha & promo rules), TC-08 to TC-11 (shared stock & net-difference), TC-12 (out-of-order pricing race handling), TC-13 to TC-16 (reservations, atomic failure, 5-min timer expiry, duplicate pay idempotency), TC-17 (order persistence & D6 export), TC-18 to TC-20 (Gemini function calling & D5 factual refusal).
   - `src/test/smoke.test.tsx` (2 tests): Application mount, navbar brand rendering, and layout smoke test.
   - `src/test/menuApi.test.ts` (2 tests): `/api/menu` Appendix A fixture verification and 90-second server time offset.
   - `src/test/rulesEngine.test.ts` (9 tests): Acceptance criteria TC-01 to TC-04, override precedence, distinct/per-option limits, and edge cases.
@@ -192,15 +193,10 @@ src/
   - `src/test/pricingEngine.test.ts` (7 tests): Acceptance criteria TC-05, TC-06, TC-07, Q2, Q3, Q4, and MSW `/api/price` integration.
   - `src/test/orderBuilder.test.tsx` (7 tests): Order builder UI integration, live validation alerts, stock button disabling at 0, Item Qty, and TC-12 out-of-order price response handling.
   - `src/test/cartReservations.test.tsx` (4 tests): Rapid clicks idempotency (TC-13), atomic mid-way reservation failure and zero-stock held (TC-14), 5-minute timer expiry with stock release and read-only UI (TC-15), and duplicate pay click prevention (TC-16).
-  - `src/test/ordersStorage.test.tsx` (3 tests): Checkout persistence in documented D6 shape (TC-17), OrdersView rendering, empty state, and JSON download trigger.
+  - `src/test/ordersStorage.test.tsx` (5 tests): Checkout persistence in documented D6 shape (TC-17), OrdersView rendering, pagination, page size selector, empty state, and JSON download trigger.
   - `src/test/analyticsEngine.test.ts` (8 tests): Deterministic analytics queries (Q5-Q8, order count, total revenue, best-selling option ranking, payment method breakdown, AOV, coupon stats, date filtering, and D5 factual refusal).
   - `src/test/assistantAi.test.tsx` (4 tests): Sales assistant integration tests covering TC-18 (order count diff after checkout), TC-19 (best-selling option tool call), TC-20 (anti-hallucination customer data refusal), and AssistantChat UI interaction.
-- **Test Count**: 55 passed tests across 10 test suites.
-
-### Planned Testing Coverage
-- Pure engine unit tests covering TC-01 through TC-11.
-- Async race condition, timer, and retry tests covering TC-12 through TC-16.
-- End-to-end user journeys and assistant tests covering TC-17 through TC-20.
+- **Test Count**: 76 passed tests across 11 test suites.
 
 ---
 
@@ -208,15 +204,15 @@ src/
 
 Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/media/imtiazbd/Development/HTML/New_Devolop/Smart-Order-Builder/DECISIONS.md):
 - **C1**: Integer Poisha vs. JavaScript floating point (Decided in Step 04)
-- **C2**: Chatbot query surface and deterministic tool contracts
+- **C2**: Chatbot query surface and deterministic tool contracts (Decided in Step 08)
 - **D1**: Concurrent stock depletion handling (Decided in Step 03)
 - **D2**: Promotional price lock timing (Decided in Step 04)
-- **D3**: Reservation expiry during active modification
-- **D4**: Canonical order ID and timestamp ownership
-- **D5**: Customer data limitations and anti-hallucination guardrails
+- **D3**: Reservation expiry during active modification (Decided in Step 06)
+- **D4**: Canonical order ID and timestamp ownership (Decided in Step 07)
+- **D5**: Customer data limitations and anti-hallucination guardrails (Decided in Step 08)
 - **D6**: Order JSON schema and coupon auditing (Decided in Step 01)
 
-*(Decisions C2, D3, D4, and D5 remain marked Pending until their respective implementation milestones.)*
+*(All architectural decisions are finalized and verified against implemented business logic.)*
 
 ---
 
@@ -233,12 +229,8 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 - [x] Step 07: Checkout, order storage, and JSON export
 - [x] Step 08: Sales analytics engine
 - [x] Step 09: Gemini assistant integration
-- [ ] Step 10: Full acceptance test suite (TC-01 to TC-20)
+- [x] Step 10: Full acceptance test suite (TC-01 to TC-20)
 - [ ] Step 11: Multi-tab sync and draft recovery bonus features
-
-### Known Limitations (Step 00)
-- No user-facing domain features or API endpoints are active yet.
-- Mock server handlers and menu fixtures are not yet loaded.
 
 ---
 
@@ -256,20 +248,20 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 | Step 07 | Checkout and order persistence | 30 Mins |
 | Step 08 | Sales analytics | 20 Mins |
 | Step 09 | Gemini assistant | 30 Mins |
-| Step 10 | Acceptance tests and documentation | Pending |
+| Step 10 | Acceptance tests and documentation | 25 Mins |
 | Step 11 | Bonus requirements | Pending |
-| **Total** | | **Pending** |
+| **Total** | | **6h 40m** |
 
 ---
 
 ## 5.13 Assessment Answers
 
-Calculations for questions Q1 through Q8 are tracked in [ANSWERS.md](file:///run/media/imtiazbd/Development/HTML/New_Devolop/Smart-Order-Builder/ANSWERS.md). All answers remain marked `Pending verification` until engines and fixtures are implemented.
+Calculations for questions Q1 through Q8 are tracked and verified in [ANSWERS.md](file:///run/media/imtiazbd/Development/HTML/New_Devolop/Smart-Order-Builder/ANSWERS.md). All answers are fully verified with automated Vitest suites.
 
 ---
 
 ## 5.14 Project Status
 
-- **Latest Completed Milestone**: Step 04 (Pricing Engine)
-- **Current Milestone**: Step 05 (Order Builder UI) — Ready for Review
-- **Next Milestone**: Step 06 (Reservations and Cart)
+- **Latest Completed Milestone**: Step 10 (Full Acceptance Test Suite TC-01 to TC-20 & Final Technical Documentation)
+- **Current Milestone**: Step 10 — Ready for Review / Ready for Step 11 (Bonus Features)
+- **Next Milestone**: Step 11 (Multi-Tab Sync & Draft Recovery)
