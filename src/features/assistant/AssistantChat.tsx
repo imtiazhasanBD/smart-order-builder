@@ -6,10 +6,11 @@ import { Bot, Send, User, Sparkles } from 'lucide-react';
 export interface AssistantChatProps {
   orders: StoredOrder[];
   groups: Group[];
+  apiKey?: string;
 }
 
-export const AssistantChat: React.FC<AssistantChatProps> = ({ orders, groups }) => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+export const AssistantChat: React.FC<AssistantChatProps> = ({ orders, groups, apiKey: apiKeyProp }) => {
+  const apiKey = apiKeyProp !== undefined ? apiKeyProp : import.meta.env.VITE_GEMINI_API_KEY;
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {

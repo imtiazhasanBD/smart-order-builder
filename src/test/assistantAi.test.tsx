@@ -82,7 +82,7 @@ describe('Step 09: Sales Assistant AI & Function Calling (TC-18, TC-19, TC-20)',
   it('AssistantChat UI renders suggestion chips and responds to prompt clicks', async () => {
     const orders = serverStore.getOrders();
 
-    render(<AssistantChat orders={orders} groups={MENU_FIXTURE.groups} />);
+    render(<AssistantChat orders={orders} groups={MENU_FIXTURE.groups} apiKey="" />);
 
     // Welcome message rendered
     expect(screen.getByText(/Hello! I am your breakfast sales assistant/i)).toBeInTheDocument();

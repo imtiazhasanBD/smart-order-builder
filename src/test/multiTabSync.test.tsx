@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { OrderBuilder } from '@/features/configurator/OrderBuilder';
 import { MENU_FIXTURE } from '@/mocks/data/menu';
 import { serverStore } from '@/mocks/serverStore';
@@ -210,12 +210,14 @@ describe('Step 11 — Multi-Tab Sync & Draft Recovery (Part G Bonus)', () => {
       },
     };
 
-    window.dispatchEvent(
-      new StorageEvent('storage', {
-        key: 'smart_order_builder_sync_event',
-        newValue: JSON.stringify(peerMessage),
-      })
-    );
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: 'smart_order_builder_sync_event',
+          newValue: JSON.stringify(peerMessage),
+        })
+      );
+    });
 
     // UI immediately updates in real time to reflect the peer tab's draft
     rerender(
