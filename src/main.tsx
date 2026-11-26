@@ -5,12 +5,15 @@ import { AppProviders } from '@/app/providers';
 import '@/index.css';
 
 async function prepareApp(): Promise<void> {
-  if (import.meta.env.DEV) {
-    const { worker } = await import('@/mocks/browser');
-    await worker.start({
-      onUnhandledRequest: 'bypass',
-    });
-  }
+
+  // MSW is used as the simulated mock backend.
+  const { worker } = await import('@/mocks/browser');
+  await worker.start({
+    onUnhandledRequest: 'bypass',
+    serviceWorker: {
+      url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
+    },
+  });
 }
 
 prepareApp().then(() => {
