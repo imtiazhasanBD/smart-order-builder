@@ -42,6 +42,7 @@ export interface CheckoutResult {
 }
 
 const STORAGE_ORDERS_KEY = 'smart_order_builder_orders_v1';
+const STORAGE_CART_KEY = 'smart_order_builder_cart_v1';
 
 export class MockServerStore {
   private static instance: MockServerStore;
@@ -57,6 +58,7 @@ export class MockServerStore {
     this.menu = JSON.parse(JSON.stringify(MENU_FIXTURE));
     this.optionLookup = buildOptionLookup(this.menu.groups);
     this.initOrders();
+    this.syncFromStorage();
   }
 
   public static getInstance(): MockServerStore {
@@ -145,6 +147,55 @@ export class MockServerStore {
     }
   }
 
+  public syncFromStorage(): void {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        // Sync orders across tabs
+        const cachedOrders = window.localStorage.getItem(STORAGE_ORDERS_KEY);
+        if (cachedOrders) {
+          const parsed = JSON.parse(cachedOrders);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            this.orders = parsed;
+          }
+        }
+
+        // Sync active cart reservations & soldStock across tabs
+        const cachedCart = window.localStorage.getItem(STORAGE_CART_KEY);
+        if (cachedCart) {
+          const parsedCart = JSON.parse(cachedCart);
+          if (parsedCart && typeof parsedCart === 'object') {
+            if (typeof parsedCart.version === 'number') {
+              this.cartVersion = Math.max(this.cartVersion, parsedCart.version);
+            }
+            if (parsedCart.soldStock && typeof parsedCart.soldStock === 'object') {
+              this.soldStock = parsedCart.soldStock;
+            }
+            if (Array.isArray(parsedCart.items)) {
+              this.cartItems = new Map(parsedCart.items.map((i: CartReservationItem) => [i.id, i]));
+            }
+          }
+        }
+      }
+    } catch {
+      // Ignore
+    }
+  }
+
+  public persistCart(): void {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const payload = {
+          version: this.cartVersion,
+          soldStock: this.soldStock,
+          items: Array.from(this.cartItems.values()),
+        };
+        window.localStorage.setItem(STORAGE_CART_KEY, JSON.stringify(payload));
+      }
+    } catch {
+      // Ignore
+    }
+  }
+
   public getMenu(): MenuResponse {
     return {
       ...this.menu,
@@ -154,6 +205,7 @@ export class MockServerStore {
   }
 
   public getOrders(): StoredOrder[] {
+    this.syncFromStorage();
     return [...this.orders];
   }
 
@@ -174,6 +226,7 @@ export class MockServerStore {
   }
 // get available stock for order builder
   public getAvailableStock(excludeItemId?: string): Record<string, number> {
+    this.syncFromStorage();
     this.sweepExpiredReservations();
 
     const reserved: Record<string, number> = {};
@@ -215,6 +268,7 @@ export class MockServerStore {
 
   // Returns active cart snapshot
   public getCartSnapshot() {
+    this.syncFromStorage();
     this.sweepExpiredReservations();
     const items = Array.from(this.cartItems.values()).map((item) => ({
       ...item,
@@ -235,6 +289,8 @@ export class MockServerStore {
     qty: number,
     clientVersion?: number
   ): ReserveResult {
+    this.syncFromStorage();
+
     // 1. Check idempotency cache (TC-13)
     if (idempotencyKey && this.idempotencyKeys.has(idempotencyKey)) {
       return this.idempotencyKeys.get(idempotencyKey)!.result;
@@ -293,6 +349,7 @@ export class MockServerStore {
 
     this.cartItems.set(newItem.id, newItem);
     this.cartVersion += 1;
+    this.persistCart();
 
     const result: ReserveResult = {
       success: true,
@@ -314,6 +371,8 @@ export class MockServerStore {
     qty: number,
     clientVersion?: number
   ): ReserveResult {
+    this.syncFromStorage();
+
     if (clientVersion !== undefined && clientVersion < this.cartVersion) {
       return {
         success: false,
@@ -364,6 +423,7 @@ export class MockServerStore {
     currentItem.isExpired = false;
 
     this.cartVersion += 1;
+    this.persistCart();
 
     return {
       success: true,
@@ -374,12 +434,15 @@ export class MockServerStore {
 
   // Removes an item from cart and releases reserved stock
   public removeItem(itemId: string, clientVersion?: number): { success: boolean; version: number } {
+    this.syncFromStorage();
+
     if (clientVersion !== undefined && clientVersion < this.cartVersion) {
       // Allow remove but advance version
     }
 
     this.cartItems.delete(itemId);
     this.cartVersion += 1;
+    this.persistCart();
 
     return {
       success: true,
@@ -394,6 +457,8 @@ export class MockServerStore {
     couponCode?: string | null,
     clientVersion?: number
   ): CheckoutResult {
+    this.syncFromStorage();
+
     if (idempotencyKey && this.idempotencyKeys.has(idempotencyKey)) {
       return this.idempotencyKeys.get(idempotencyKey)!.result;
     }
@@ -467,6 +532,7 @@ export class MockServerStore {
     this.persistOrders();
     this.cartItems.clear();
     this.cartVersion += 1;
+    this.persistCart();
 
     const result: CheckoutResult = {
       success: true,
@@ -484,6 +550,7 @@ export class MockServerStore {
   public reset(): void {
     if (typeof window !== 'undefined' && window.localStorage) {
       window.localStorage.removeItem(STORAGE_ORDERS_KEY);
+      window.localStorage.removeItem(STORAGE_CART_KEY);
     }
     this.menu = JSON.parse(JSON.stringify(MENU_FIXTURE));
     this.cartVersion = 1;

@@ -181,11 +181,12 @@ src/
 
 ## 5.9 Testing
 
-### Current Testing Setup (Step 10)
+### Current Testing Setup (Step 11 — Complete)
 - **Harness**: Vitest with `jsdom` environment.
 - **Setup File**: `src/test/setup.ts` with `@testing-library/jest-dom` extensions and MSW test server lifecycle (`server.listen()`, `server.resetHandlers()`, `server.close()`).
 - **Test Suites**:
   - `src/test/acceptanceE2E.test.tsx` (21 tests): Authoritative end-to-end acceptance suite verifying all 20 technical requirements: TC-01 to TC-04 (validation engine), TC-05 to TC-07 (pricing in integer poisha & promo rules), TC-08 to TC-11 (shared stock & net-difference), TC-12 (out-of-order pricing race handling), TC-13 to TC-16 (reservations, atomic failure, 5-min timer expiry, duplicate pay idempotency), TC-17 (order persistence & D6 export), TC-18 to TC-20 (Gemini function calling & D5 factual refusal).
+  - `src/test/multiTabSync.test.tsx` (8 tests): Cross-tab BroadcastChannel & storage event synchronization, localStorage draft persistence/recovery, draft banner lifecycle, shared cart state persistence, and HTTP 409 conflict handling.
   - `src/test/smoke.test.tsx` (2 tests): Application mount, navbar brand rendering, and layout smoke test.
   - `src/test/menuApi.test.ts` (2 tests): `/api/menu` Appendix A fixture verification and 90-second server time offset.
   - `src/test/rulesEngine.test.ts` (9 tests): Acceptance criteria TC-01 to TC-04, override precedence, distinct/per-option limits, and edge cases.
@@ -196,7 +197,7 @@ src/
   - `src/test/ordersStorage.test.tsx` (5 tests): Checkout persistence in documented D6 shape (TC-17), OrdersView rendering, pagination, page size selector, empty state, and JSON download trigger.
   - `src/test/analyticsEngine.test.ts` (8 tests): Deterministic analytics queries (Q5-Q8, order count, total revenue, best-selling option ranking, payment method breakdown, AOV, coupon stats, date filtering, and D5 factual refusal).
   - `src/test/assistantAi.test.tsx` (4 tests): Sales assistant integration tests covering TC-18 (order count diff after checkout), TC-19 (best-selling option tool call), TC-20 (anti-hallucination customer data refusal), and AssistantChat UI interaction.
-- **Test Count**: 76 passed tests across 11 test suites.
+- **Test Count**: 84 passed tests across 12 test suites.
 
 ---
 
@@ -230,7 +231,7 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 - [x] Step 08: Sales analytics engine
 - [x] Step 09: Gemini assistant integration
 - [x] Step 10: Full acceptance test suite (TC-01 to TC-20)
-- [ ] Step 11: Multi-tab sync and draft recovery bonus features
+- [x] Step 11: Multi-tab sync and draft recovery bonus features
 
 ---
 
@@ -249,8 +250,8 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 | Step 08 | Sales analytics | 20 Mins |
 | Step 09 | Gemini assistant | 30 Mins |
 | Step 10 | Acceptance tests and documentation | 25 Mins |
-| Step 11 | Bonus requirements | Pending |
-| **Total** | | **6h 40m** |
+| Step 11 | Bonus multi-tab sync & draft recovery | 45 Mins |
+| **Total** | | **7h 25m** |
 
 ---
 
@@ -262,6 +263,6 @@ Calculations for questions Q1 through Q8 are tracked and verified in [ANSWERS.md
 
 ## 5.14 Project Status
 
-- **Latest Completed Milestone**: Step 10 (Full Acceptance Test Suite TC-01 to TC-20 & Final Technical Documentation)
-- **Current Milestone**: Step 10 — Ready for Review / Ready for Step 11 (Bonus Features)
-- **Next Milestone**: Step 11 (Multi-Tab Sync & Draft Recovery)
+- **Latest Completed Milestone**: Step 11 (Bonus Features: Multi-Tab Broadcast Sync & Draft Recovery)
+- **Current Milestone**: All 12 Milestones (Steps 00 to 11) Completed & Fully Verified
+- **Overall Quality**: 84/84 Vitest tests passing; 0 TypeScript errors; Production build clean. Ready for final evaluation!

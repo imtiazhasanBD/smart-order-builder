@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   MenuResponse,
   SelectedOptions,
@@ -12,6 +12,7 @@ import {
   checkStockForConfig,
 } from '@/engines/inventory';
 import { usePricePreview } from './usePricePreview';
+import { broadcastSync, subscribeToSync } from '@/lib/syncChannel';
 import {
   Plus,
   Minus,
@@ -25,6 +26,7 @@ import {
   ChevronDown,
   ChevronUp,
   Receipt,
+  Sparkles,
 } from 'lucide-react';
 import { IngredientIcon } from '@/components/IngredientIcon';
 
@@ -77,9 +79,28 @@ export const OrderBuilder: React.FC<OrderBuilderProps> = ({
     return {};
   });
 
+  // Track if a draft was restored on initial load (Part G bonus)
+  const [hasRestoredDraft, setHasRestoredDraft] = useState<boolean>(() => {
+    if (editingItem) return false;
+    try {
+      const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return Object.values(parsed).some((v) => Number(v) > 0);
+      }
+    } catch {
+      return false;
+    }
+    return false;
+  });
+
   const [qty, setQty] = useState<number>(() => editingItem?.qty || 1);
   const [showMobileBreakdown, setShowMobileBreakdown] = useState<boolean>(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+
+  // Ref to track if config update was received from an external tab to prevent echo loops
+  const isIncomingSyncRef = useRef<boolean>(false);
+  const broadcastTimerRef = useRef<any>(null);
 
   const toggleGroup = (groupId: string) => {
     setCollapsedGroups((prev) => ({
@@ -103,11 +124,55 @@ export const OrderBuilder: React.FC<OrderBuilderProps> = ({
     }
   };
 
-  // Sync draft to localStorage when not editing (Part G bonus: draft survives refresh)
+  // Cross-tab real-time sync for order builder draft (Part G Bonus)
+  useEffect(() => {
+    if (editingItem) return;
+
+    const unsubscribe = subscribeToSync((msg) => {
+      if (msg.type === 'DRAFT_UPDATED' && msg.payload && typeof msg.payload.config === 'object') {
+        const incomingConfig = msg.payload.config as SelectedOptions;
+        setConfig((prev) => {
+          // If already equal, ignore to prevent unneeded re-render & layout shift
+          if (JSON.stringify(prev) === JSON.stringify(incomingConfig)) {
+            return prev;
+          }
+          isIncomingSyncRef.current = true;
+          return { ...incomingConfig };
+        });
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [editingItem]);
+
+  // Sync draft to localStorage when not editing & broadcast to peer tabs (Part G bonus: draft survives refresh)
   useEffect(() => {
     if (!editingItem) {
-      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(config));
+      // If this config change came from another tab via sync, acknowledge and do not echo back
+      if (isIncomingSyncRef.current) {
+        isIncomingSyncRef.current = false;
+        return;
+      }
+
+      const hasOptions = Object.values(config).some((v) => Number(v) > 0);
+      if (hasOptions) {
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(config));
+      } else {
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+      }
+
+      // Debounce broadcast by 80ms to avoid flooding peer tabs during rapid clicking
+      clearTimeout(broadcastTimerRef.current);
+      broadcastTimerRef.current = setTimeout(() => {
+        broadcastSync('DRAFT_UPDATED', { config });
+      }, 80);
     }
+
+    return () => {
+      clearTimeout(broadcastTimerRef.current);
+    };
   }, [config, editingItem]);
 
   // When editingItem prop changes
@@ -188,6 +253,8 @@ export const OrderBuilder: React.FC<OrderBuilderProps> = ({
     setConfig({});
     setQty(1);
     localStorage.removeItem(DRAFT_STORAGE_KEY);
+    setHasRestoredDraft(false);
+    broadcastSync('DRAFT_UPDATED', { config: {} });
     if (editingItem && onCancelEdit) {
       onCancelEdit();
     }
@@ -209,6 +276,8 @@ export const OrderBuilder: React.FC<OrderBuilderProps> = ({
       setConfig({});
       setQty(1);
       localStorage.removeItem(DRAFT_STORAGE_KEY);
+      setHasRestoredDraft(false);
+      broadcastSync('DRAFT_UPDATED', { config: {} });
     }
   };
 
@@ -227,6 +296,41 @@ export const OrderBuilder: React.FC<OrderBuilderProps> = ({
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       {/* Left Column: Configurator & Option Groups (adds bottom padding on mobile so dock never covers bottom options) */}
       <div className="lg:col-span-7 xl:col-span-8 space-y-6 pb-48 lg:pb-0">
+        {/* Draft Restored Banner (Part G bonus: draft survives refresh) */}
+        {hasRestoredDraft && !editingItem && hasSelections && (
+          <div
+            data-testid="draft-restored-banner"
+            className="bg-amber-50 border border-amber-200 rounded-md p-3.5 flex flex-wrap items-center justify-between gap-2 text-xs text-amber-950 shadow-xs"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>
+                <strong>Draft Restored:</strong> Your previous item selections were recovered from your browser session.
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  handleReset();
+                  setHasRestoredDraft(false);
+                }}
+                className="font-semibold text-amber-800 hover:text-amber-950 underline cursor-pointer"
+              >
+                Clear Draft
+              </button>
+              <button
+                type="button"
+                aria-label="Dismiss draft notice"
+                onClick={() => setHasRestoredDraft(false)}
+                className="text-amber-600 hover:text-amber-900 font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Product Banner */}
         <div className="bg-white border border-slate-200 rounded-md p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
           <div>

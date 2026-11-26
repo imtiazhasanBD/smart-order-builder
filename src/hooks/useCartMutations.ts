@@ -9,6 +9,7 @@ import {
 } from '@/services/api';
 import { PaymentMethod, SelectedOptions } from '@/types';
 import { ReserveResult, CheckoutResult } from '@/mocks/serverStore';
+import { broadcastSync } from '@/lib/syncChannel';
 
 // Custom hook managing cart mutations
 export const useCartMutations = (cartVersion: number) => {
@@ -66,6 +67,7 @@ export const useCartMutations = (cartVersion: number) => {
     onSuccess: async () => {
       reserveKeyRef.current = null;
       await refreshCart();
+      broadcastSync('CART_UPDATED');
     },
     onError: handleMutationError,
   });
@@ -85,6 +87,7 @@ export const useCartMutations = (cartVersion: number) => {
     },
     onSuccess: async () => {
       await refreshCart();
+      broadcastSync('CART_UPDATED');
     },
     onError: handleMutationError,
   });
@@ -100,6 +103,7 @@ export const useCartMutations = (cartVersion: number) => {
     },
     onSuccess: async () => {
       await refreshCart();
+      broadcastSync('CART_UPDATED');
     },
     onError: handleMutationError,
   });
@@ -132,6 +136,7 @@ export const useCartMutations = (cartVersion: number) => {
     onSuccess: async () => {
       checkoutKeyRef.current = null;
       await Promise.all([refreshCart(), refreshOrders()]);
+      broadcastSync('ORDER_COMPLETED');
     },
     onError: handleMutationError,
   });
