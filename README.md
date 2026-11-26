@@ -194,7 +194,8 @@ src/
   - `src/test/cartReservations.test.tsx` (4 tests): Rapid clicks idempotency (TC-13), atomic mid-way reservation failure and zero-stock held (TC-14), 5-minute timer expiry with stock release and read-only UI (TC-15), and duplicate pay click prevention (TC-16).
   - `src/test/ordersStorage.test.tsx` (3 tests): Checkout persistence in documented D6 shape (TC-17), OrdersView rendering, empty state, and JSON download trigger.
   - `src/test/analyticsEngine.test.ts` (8 tests): Deterministic analytics queries (Q5-Q8, order count, total revenue, best-selling option ranking, payment method breakdown, AOV, coupon stats, date filtering, and D5 factual refusal).
-- **Test Count**: 49 passed tests across 9 test suites.
+  - `src/test/assistantAi.test.tsx` (4 tests): Sales assistant integration tests covering TC-18 (order count diff after checkout), TC-19 (best-selling option tool call), TC-20 (anti-hallucination customer data refusal), and AssistantChat UI interaction.
+- **Test Count**: 55 passed tests across 10 test suites.
 
 ### Planned Testing Coverage
 - Pure engine unit tests covering TC-01 through TC-11.
@@ -231,7 +232,7 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 - [x] Step 06: Cart and reservation lifecycle
 - [x] Step 07: Checkout, order storage, and JSON export
 - [x] Step 08: Sales analytics engine
-- [ ] Step 09: Gemini assistant integration
+- [x] Step 09: Gemini assistant integration
 - [ ] Step 10: Full acceptance test suite (TC-01 to TC-20)
 - [ ] Step 11: Multi-tab sync and draft recovery bonus features
 
@@ -254,7 +255,7 @@ Architectural decisions and trade-offs are logged in [DECISIONS.md](file:///run/
 | Step 06 | Reservations and cart | 40 Mins |
 | Step 07 | Checkout and order persistence | 30 Mins |
 | Step 08 | Sales analytics | 20 Mins |
-| Step 09 | Gemini assistant | Pending |
+| Step 09 | Gemini assistant | 30 Mins |
 | Step 10 | Acceptance tests and documentation | Pending |
 | Step 11 | Bonus requirements | Pending |
 | **Total** | | **Pending** |

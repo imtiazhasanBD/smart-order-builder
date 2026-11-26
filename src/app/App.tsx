@@ -8,8 +8,9 @@ import { OrderBuilder } from '@/features/configurator/OrderBuilder';
 import { OrderBuilderSkeleton } from '@/components/OrderBuilderSkeleton';
 import { Cart } from '@/features/cart/Cart';
 import { OrdersView } from '@/features/orders/OrdersView';
+import { AssistantChat } from '@/features/assistant/AssistantChat';
 import { Navbar } from '@/components/Navbar';
-import { AlertCircle, Bot } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { SelectedOptions, PaymentMethod } from '@/types';
 import { CartReservationItem } from '@/mocks/serverStore';
 
@@ -161,13 +162,7 @@ export const App: React.FC = () => {
             )}
 
             {activeTab === 'assistant' && (
-              <div className="bg-white border border-slate-200 rounded-md p-8 shadow-xs text-center">
-                <Bot className="w-12 h-12 text-indigo-600 mx-auto mb-3" />
-                <h2 className="text-xl font-bold text-slate-800">Sales AI Assistant</h2>
-                <p className="text-sm text-slate-500 mt-1">
-                  Gemini Flash sales analytics and natural language query agent will be available in Step 09.
-                </p>
-              </div>
+              <AssistantChat orders={orders} groups={menu.groups} />
             )}
           </>
         )}
